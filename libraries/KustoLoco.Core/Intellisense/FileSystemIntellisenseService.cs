@@ -13,7 +13,7 @@ public interface IFileSystemIntellisenseService
 public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystemIntellisenseService
 {
 
-    public virtual IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path)
+    public IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path)
     {
         if (!fileSystem.Path.IsPathRooted(path))
         {
