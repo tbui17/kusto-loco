@@ -15,7 +15,7 @@ public class IntellisenseService(IFileSystem fileSystem) : IIntellisenseService
 
     public virtual IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path)
     {
-        if (!Path.IsPathRooted(path))
+        if (!fileSystem.Path.IsPathRooted(path))
         {
             return [];
         }
@@ -33,7 +33,7 @@ public class IntellisenseService(IFileSystem fileSystem) : IIntellisenseService
         if (fileSystem.Directory.Exists(path))
         {
             var result = fileSystem.DirectoryInfo.New(path).EnumerateFileSystemInfos("*", enumerationOptions);
-            if (Path.EndsInDirectorySeparator(path))
+            if (fileSystem.Path.EndsInDirectorySeparator(path))
             {
                 return result.Select(x => new IntellisenseEntry { Name = $"{x.Name}" });
             }
@@ -44,8 +44,8 @@ public class IntellisenseService(IFileSystem fileSystem) : IIntellisenseService
 
         // partial or invalid paths
 
-        var fileName = Path.TrimEndingDirectorySeparator(Path.GetFileName(path));
-        var dir = fileSystem.DirectoryInfo.New(Path.GetDirectoryName(path)!);
+        var fileName = fileSystem.Path.TrimEndingDirectorySeparator(fileSystem.Path.GetFileName(path));
+        var dir = fileSystem.DirectoryInfo.New(fileSystem.Path.GetDirectoryName(path)!);
         var entries = dir
             .EnumerateFileSystemInfos("*", enumerationOptions)
             .Where(x => x.Name.StartsWith(fileName))
