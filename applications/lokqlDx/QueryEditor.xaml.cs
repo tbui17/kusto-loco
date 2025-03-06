@@ -33,7 +33,7 @@ public partial class QueryEditor : UserControl
 {
     private readonly EditorHelper _editorHelper;
     private readonly SchemaIntellisenseProvider _schemaIntellisenseProvider = new();
-    private readonly IIntellisenseService _intellisenseService = new IntellisenseService();
+    private readonly IIntellisenseService _intellisenseService = IntellisenseServiceProvider.GetIntellisenseService();
 
     private CompletionWindow? _completionWindow;
 
@@ -245,9 +245,9 @@ public partial class QueryEditor : UserControl
 
         var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
 
-        if (_intellisenseService.ParseRootedPath(text) is { } rootedPath)
+
+        if (_intellisenseService.GetPathIntellisenseOptions(text).ToList() is {Count: > 0} entries)
         {
-            var entries = _intellisenseService.GetPathIntellisenseOptions(rootedPath);
             ShowCompletions(entries,string.Empty,0);
             return;
         }
