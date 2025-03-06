@@ -33,7 +33,7 @@ public partial class QueryEditor : UserControl
 {
     private readonly EditorHelper _editorHelper;
     private readonly SchemaIntellisenseProvider _schemaIntellisenseProvider = new();
-    private readonly IIntellisenseService _intellisenseService = IntellisenseServiceProvider.GetIntellisenseService();
+    private readonly IFileSystemIntellisenseService _fileSystemIntellisenseService = FileSystemIntellisenseServiceProvider.GetFileSystemIntellisenseService();
 
     private CompletionWindow? _completionWindow;
 
@@ -246,7 +246,7 @@ public partial class QueryEditor : UserControl
         var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
 
 
-        if (_intellisenseService.GetPathIntellisenseOptions(text).ToList() is {Count: > 0} entries)
+        if (_fileSystemIntellisenseService.GetPathIntellisenseOptions(text).ToList() is {Count: > 0} entries)
         {
             ShowCompletions(entries,string.Empty,0);
             return;

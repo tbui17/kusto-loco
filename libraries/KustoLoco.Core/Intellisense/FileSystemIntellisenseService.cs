@@ -5,12 +5,12 @@ using System.Linq;
 
 namespace KustoLoco.Core.Intellisense;
 
-public interface IIntellisenseService
+public interface IFileSystemIntellisenseService
 {
     IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path);
 }
 
-public class IntellisenseService(IFileSystem fileSystem) : IIntellisenseService
+public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystemIntellisenseService
 {
 
     public virtual IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path)

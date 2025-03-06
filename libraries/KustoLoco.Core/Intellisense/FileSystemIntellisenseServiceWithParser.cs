@@ -2,7 +2,7 @@
 
 namespace KustoLoco.Core.Intellisense;
 
-public class IntellisenseServiceWithParser(IIntellisenseService intellisenseService) : IIntellisenseService
+public class FileSystemIntellisenseServiceWithParser(IFileSystemIntellisenseService fileSystemIntellisenseService) : IFileSystemIntellisenseService
 {
     public string? GetIOQueryArgument(string lineText)
     {
@@ -25,6 +25,6 @@ public class IntellisenseServiceWithParser(IIntellisenseService intellisenseServ
         {
             return [];
         }
-        return intellisenseService.GetPathIntellisenseOptions(path);
+        return fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
     }
 }
