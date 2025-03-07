@@ -244,11 +244,10 @@ public partial class QueryEditor : UserControl
             return;
         }
 
-        var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
-
-
-        if (_fileSystemIntellisenseService.GetPathIntellisenseOptions(text).ToList() is {Count: > 0} entries)
+        if (e.Text == "/" || e.Text == "\\")
         {
+            var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
+            var entries = _fileSystemIntellisenseService.GetPathIntellisenseOptions(text).ToList();
             ShowCompletions(entries,string.Empty,0);
             return;
         }
