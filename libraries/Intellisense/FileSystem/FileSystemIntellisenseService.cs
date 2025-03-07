@@ -32,7 +32,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             var result = fileSystem.DirectoryInfo.New(path).EnumerateFileSystemInfos("*", EnumerationOptions);
             if (fileSystem.Path.EndsInDirectorySeparator(path))
             {
-                return result.Select(x => new IntellisenseEntry { Name = $"{x.Name}" });
+                return result.Select(x => new IntellisenseEntry { Name = x.Name });
             }
 
             return result.Select(x => new IntellisenseEntry { Name = $"/{x.Name}" });
