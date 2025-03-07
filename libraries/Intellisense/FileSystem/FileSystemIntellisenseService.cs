@@ -10,6 +10,11 @@ public interface IFileSystemIntellisenseService
 public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystemIntellisenseService
 {
 
+    private static readonly EnumerationOptions EnumerationOptions = new()
+    {
+        IgnoreInaccessible = true
+    };
+
     public IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path)
     {
         if (!fileSystem.Path.IsPathRooted(path))
@@ -22,14 +27,9 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return [];
         }
 
-        var enumerationOptions = new EnumerationOptions
-        {
-            IgnoreInaccessible = true
-        };
-
         if (fileSystem.Directory.Exists(path))
         {
-            var result = fileSystem.DirectoryInfo.New(path).EnumerateFileSystemInfos("*", enumerationOptions);
+            var result = fileSystem.DirectoryInfo.New(path).EnumerateFileSystemInfos("*", EnumerationOptions);
             if (fileSystem.Path.EndsInDirectorySeparator(path))
             {
                 return result.Select(x => new IntellisenseEntry { Name = $"{x.Name}" });
@@ -44,7 +44,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         var fileName = fileSystem.Path.TrimEndingDirectorySeparator(fileSystem.Path.GetFileName(path));
         var dir = fileSystem.DirectoryInfo.New(fileSystem.Path.GetDirectoryName(path)!);
         var entries = dir
-            .EnumerateFileSystemInfos("*", enumerationOptions)
+            .EnumerateFileSystemInfos("*", EnumerationOptions)
             .Where(x => x.Name.StartsWith(fileName))
             .Select(x => new IntellisenseEntry { Name = x.Name });
 
