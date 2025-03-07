@@ -69,5 +69,13 @@ public class FileSystemIntellisenseServiceTests
         results.Should().BeEmpty();
     }
 
+    [Fact]
+    public void GetPathIntellisenseOptions_NonexistentRootPath_ReturnsEmptyCollection()
+    {
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("D:");
+
+        results.Should().BeEmpty();
+    }
+
 
 }

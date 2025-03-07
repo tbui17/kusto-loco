@@ -42,7 +42,13 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         // partial or invalid paths
 
         var fileName = fileSystem.Path.TrimEndingDirectorySeparator(fileSystem.Path.GetFileName(path));
-        var dir = fileSystem.DirectoryInfo.New(fileSystem.Path.GetDirectoryName(path)!);
+
+        if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
+        {
+            return [];
+        }
+
+        var dir = fileSystem.DirectoryInfo.New(dirPath);
         var entries = dir
             .EnumerateFileSystemInfos("*", EnumerationOptions)
             .Where(x => x.Name.StartsWith(fileName))
