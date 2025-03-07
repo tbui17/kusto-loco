@@ -35,6 +35,24 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
+    public void GetPathIntellisenseOptions_NonexistentDirDirectorySeparatorSuffix_ReturnsEmptyCollection()
+    {
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/NonExistentDir/");
+
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_NonexistentDirNoDirectorySeparatorSuffix_ReturnsEmptyCollection()
+    {
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/NonExistentDir");
+
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
     public void GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithoutDirectorySeparator()
     {
         var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/");
@@ -84,6 +102,5 @@ public class FileSystemIntellisenseServiceTests
 
         results.Should().BeEmpty();
     }
-
 
 }

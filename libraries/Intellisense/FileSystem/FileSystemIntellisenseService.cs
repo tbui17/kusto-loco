@@ -46,6 +46,11 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return [];
         }
 
+        if (!fileSystem.Directory.Exists(dirPath))
+        {
+            return [];
+        }
+
         var dir = fileSystem.DirectoryInfo.New(dirPath);
         var fileName = fileSystem.Path.TrimEndingDirectorySeparator(fileSystem.Path.GetFileName(path));
         var entries = dir
