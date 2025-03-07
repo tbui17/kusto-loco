@@ -77,5 +77,13 @@ public class FileSystemIntellisenseServiceTests
         results.Should().BeEmpty();
     }
 
+    [Fact]
+    public void GetPathIntellisenseOptions_NonRootedPath_ReturnsEmptyCollection()
+    {
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("./Folder1/MyFile1.txt");
+
+        results.Should().BeEmpty();
+    }
+
 
 }
