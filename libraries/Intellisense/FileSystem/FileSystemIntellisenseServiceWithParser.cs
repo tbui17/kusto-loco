@@ -17,11 +17,11 @@ public class FileSystemIntellisenseServiceWithParser(IFileSystemIntellisenseServ
         return path;
     }
 
-    public IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string lineText)
+    public CompletionResult GetPathIntellisenseOptions(string lineText)
     {
         if (GetIOQueryArgument(lineText) is not { } path)
         {
-            return [];
+            return new CompletionResult();
         }
         return fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
     }

@@ -31,7 +31,7 @@ public class FileSystemIntellisenseServiceTests
     public void
         GetPathIntellisenseOptions_ValidDirNoDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithDirectorySeparator()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1").Entries;
 
         results
             .Select(x => x.Name)
@@ -48,7 +48,7 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentDirDirectorySeparatorSuffix_ReturnsEmptyCollection()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/NonExistentDir/");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/NonExistentDir/").Entries;
 
 
         results.Should().BeEmpty();
@@ -57,7 +57,7 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentDirNoDirectorySeparatorSuffix_ReturnsEmptyCollection()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/NonExistentDir");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/NonExistentDir").Entries;
 
 
         results.Should().BeEmpty();
@@ -67,7 +67,7 @@ public class FileSystemIntellisenseServiceTests
     public void
         GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithoutDirectorySeparator()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/").Entries;
 
         results
             .Select(x => x.Name)
@@ -84,7 +84,7 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_ValidFilePath_ReturnsEmptyCollection()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/File1.Txt");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/File1.Txt").Entries;
 
 
         results.Should().BeEmpty();
@@ -93,7 +93,7 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_PartialPathInput_ReturnsPathsStartingWithInput()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/MyF");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/MyF").Entries;
 
 
         results.Select(x => x.Name).Should().BeEquivalentTo("MyFile1.txt", "MyFile2.txt");
@@ -103,7 +103,7 @@ public class FileSystemIntellisenseServiceTests
     public void GetPathIntellisenseOptions_NonexistentPath_ReturnsEmptyCollection()
     {
         var results =
-            _fileSystemIntellisenseService.GetPathIntellisenseOptions("/8a759e74-d7d3-4618-99d5-b917e0a8a605");
+            _fileSystemIntellisenseService.GetPathIntellisenseOptions("/8a759e74-d7d3-4618-99d5-b917e0a8a605").Entries;
 
         results.Should().BeEmpty();
     }
@@ -111,7 +111,7 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentRootPath_ReturnsEmptyCollection()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("D:");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("D:").Entries;
 
         results.Should().BeEmpty();
     }
@@ -119,7 +119,7 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_NonRootedPath_ReturnsEmptyCollection()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("./Folder1/MyFile1.txt");
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("./Folder1/MyFile1.txt").Entries;
 
         results.Should().BeEmpty();
     }
