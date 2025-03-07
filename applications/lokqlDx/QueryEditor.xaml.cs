@@ -14,6 +14,7 @@ using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
+using Intellisense;
 using Intellisense.FileSystem;
 using KustoLoco.Core.Settings;
 using Lokql.Engine;
