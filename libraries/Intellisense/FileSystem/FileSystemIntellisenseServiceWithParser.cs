@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace KustoLoco.Core.Intellisense;
+﻿namespace Intellisense.FileSystem;
 
 public class FileSystemIntellisenseServiceWithParser(IFileSystemIntellisenseService fileSystemIntellisenseService) : IFileSystemIntellisenseService
 {

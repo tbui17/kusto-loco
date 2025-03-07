@@ -1,10 +1,8 @@
-﻿using System.IO.Abstractions;
-
-namespace KustoLoco.Core.Intellisense;
+﻿namespace Intellisense.FileSystem;
 
 public static class FileSystemIntellisenseServiceProvider
 {
-    private static readonly FileSystem FileSystem = new();
+    private static readonly System.IO.Abstractions.FileSystem FileSystem = new();
     public static IFileSystemIntellisenseService GetFileSystemIntellisenseService()
     {
         return new FileSystemIntellisenseServiceWithParser(new FileSystemIntellisenseService(FileSystem));

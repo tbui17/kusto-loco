@@ -1,3 +1,3 @@
-﻿namespace KustoLoco.Core.Intellisense;
+﻿namespace Intellisense.FileSystem;
 
 public readonly record struct IntellisenseEntry(string Name, string Description, string Syntax);

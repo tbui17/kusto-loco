@@ -2,10 +2,10 @@
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using FluentAssertions;
-using KustoLoco.Core.Intellisense;
+using Intellisense.FileSystem;
 using Xunit;
 
-namespace CoreTests;
+namespace IntellisenseTests;
 
 public class FileSystemIntellisenseServiceTests
 {

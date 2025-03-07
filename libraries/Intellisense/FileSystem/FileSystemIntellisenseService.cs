@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.IO.Abstractions;
-using System.Linq;
+﻿using System.IO.Abstractions;
 
-namespace KustoLoco.Core.Intellisense;
+namespace Intellisense.FileSystem;
 
 public interface IFileSystemIntellisenseService
 {
