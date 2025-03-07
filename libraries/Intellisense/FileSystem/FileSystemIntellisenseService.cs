@@ -35,7 +35,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
                 return result.Select(x => new IntellisenseEntry { Name = x.Name });
             }
 
-            return result.Select(x => new IntellisenseEntry { Name = $"/{x.Name}" });
+            return result.Select(x => new IntellisenseEntry { Name = $"{fileSystem.Path.DirectorySeparatorChar}{x.Name}" });
         }
 
 

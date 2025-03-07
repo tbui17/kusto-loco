@@ -10,28 +10,39 @@ namespace IntellisenseTests;
 public class FileSystemIntellisenseServiceTests
 {
     private readonly FileSystemIntellisenseService _fileSystemIntellisenseService;
+    private readonly MockFileSystem _fileSystem;
 
     public FileSystemIntellisenseServiceTests()
     {
-        var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
-        {
-            ["C:/File1.txt"] = new(""),
-            ["C:/Folder1/File1.txt"] = new(""),
-            ["C:/Folder1/File2.txt"] = new(""),
-            ["C:/Folder1/MyFile1.txt"] = new(""),
-            ["C:/Folder1/MyFile2.txt"] = new(""),
-            ["C:/Folder1/Folder2"] = new MockDirectoryData()
-        });
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(fileSystem);
+        _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
+            {
+                ["C:/File1.txt"] = new(""),
+                ["C:/Folder1/File1.txt"] = new(""),
+                ["C:/Folder1/File2.txt"] = new(""),
+                ["C:/Folder1/MyFile1.txt"] = new(""),
+                ["C:/Folder1/MyFile2.txt"] = new(""),
+                ["C:/Folder1/Folder2"] = new MockDirectoryData()
+            }
+        );
+        _fileSystemIntellisenseService = new FileSystemIntellisenseService(_fileSystem);
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_ValidDirNoDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithDirectorySeparator()
+    public void
+        GetPathIntellisenseOptions_ValidDirNoDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithDirectorySeparator()
     {
         var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1");
 
-
-        results.Select(x => x.Name).Should().BeEquivalentTo("/File1.txt","/File2.txt","/MyFile1.txt","/MyFile2.txt","/Folder2");
+        results
+            .Select(x => x.Name)
+            .Should()
+            .BeEquivalentTo(
+                $"{_fileSystem.Path.DirectorySeparatorChar}File1.txt",
+                $"{_fileSystem.Path.DirectorySeparatorChar}File2.txt",
+                $"{_fileSystem.Path.DirectorySeparatorChar}MyFile1.txt",
+                $"{_fileSystem.Path.DirectorySeparatorChar}MyFile2.txt",
+                $"{_fileSystem.Path.DirectorySeparatorChar}Folder2"
+            );
     }
 
     [Fact]
@@ -53,12 +64,21 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithoutDirectorySeparator()
+    public void
+        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffix_ReturnsDirectoryChildrenWithoutDirectorySeparator()
     {
         var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/");
 
-
-        results.Select(x => x.Name).Should().BeEquivalentTo("File1.txt","File2.txt","MyFile1.txt","MyFile2.txt","Folder2");
+        results
+            .Select(x => x.Name)
+            .Should()
+            .BeEquivalentTo(
+                "File1.txt",
+                "File2.txt",
+                "MyFile1.txt",
+                "MyFile2.txt",
+                "Folder2"
+            );
     }
 
     [Fact]
@@ -76,13 +96,14 @@ public class FileSystemIntellisenseServiceTests
         var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/MyF");
 
 
-        results.Select(x => x.Name).Should().BeEquivalentTo("MyFile1.txt","MyFile2.txt");
+        results.Select(x => x.Name).Should().BeEquivalentTo("MyFile1.txt", "MyFile2.txt");
     }
 
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentPath_ReturnsEmptyCollection()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/8a759e74-d7d3-4618-99d5-b917e0a8a605");
+        var results =
+            _fileSystemIntellisenseService.GetPathIntellisenseOptions("/8a759e74-d7d3-4618-99d5-b917e0a8a605");
 
         results.Should().BeEmpty();
     }
@@ -102,5 +123,4 @@ public class FileSystemIntellisenseServiceTests
 
         results.Should().BeEmpty();
     }
-
 }
