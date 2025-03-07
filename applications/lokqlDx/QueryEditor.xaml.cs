@@ -14,6 +14,7 @@ using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
+using KustoLoco.Core.Intellisense;
 using KustoLoco.Core.Settings;
 using Lokql.Engine;
 using NotNullStrings;
@@ -32,6 +33,7 @@ public partial class QueryEditor : UserControl
 {
     private readonly EditorHelper _editorHelper;
     private readonly SchemaIntellisenseProvider _schemaIntellisenseProvider = new();
+    private readonly IIntellisenseService _intellisenseService = new IntellisenseService();
 
     private CompletionWindow? _completionWindow;
 
@@ -241,6 +243,15 @@ public partial class QueryEditor : UserControl
             return;
         }
 
+        var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
+
+        if (_intellisenseService.ParseRootedPath(text) is { } rootedPath)
+        {
+            var entries = _intellisenseService.GetPathIntellisenseOptions(rootedPath);
+            ShowCompletions(entries,string.Empty,0);
+            return;
+        }
+
         if (e.Text == ".")
         {
             //only show completions if we are at the start of a line
@@ -376,7 +387,7 @@ public class EditorHelper(TextEditor query)
     }
 }
 
-public readonly record struct IntellisenseEntry(string Name, string Description, string Syntax);
+
 
 public class SchemaIntellisenseProvider
 {
