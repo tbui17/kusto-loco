@@ -236,6 +236,11 @@ public partial class QueryEditor : UserControl
         _completionWindow.Closed += delegate { _completionWindow = null; };
     }
 
+    private void ShowCompletions(CompletionResult result)
+    {
+        ShowCompletions(result.Entries.ToList(),result.Prefix,result.Rewind);
+    }
+
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
         if (_completionWindow != null && !_completionWindow.CompletionList.ListBox.HasItems)
@@ -247,8 +252,8 @@ public partial class QueryEditor : UserControl
         if (e.Text == "/" || e.Text == "\\")
         {
             var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
-            var entries = _fileSystemIntellisenseService.GetPathIntellisenseOptions(text).ToList();
-            ShowCompletions(entries,string.Empty,0);
+            var entries = _fileSystemIntellisenseService.GetPathIntellisenseOptions(text);
+            ShowCompletions(entries);
             return;
         }
 

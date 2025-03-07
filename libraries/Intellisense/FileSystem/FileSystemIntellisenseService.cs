@@ -4,7 +4,7 @@ namespace Intellisense.FileSystem;
 
 public interface IFileSystemIntellisenseService
 {
-    IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path);
+    CompletionResult GetPathIntellisenseOptions(string path);
 }
 
 public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystemIntellisenseService
@@ -15,16 +15,16 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         IgnoreInaccessible = true
     };
 
-    public IEnumerable<IntellisenseEntry> GetPathIntellisenseOptions(string path)
+    public CompletionResult GetPathIntellisenseOptions(string path)
     {
         if (!fileSystem.Path.IsPathRooted(path))
         {
-            return [];
+            return new CompletionResult();
         }
 
         if (fileSystem.File.Exists(path))
         {
-            return [];
+            return new CompletionResult();
         }
 
         if (fileSystem.Directory.Exists(path))
@@ -32,10 +32,17 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             var result = fileSystem.DirectoryInfo.New(path).EnumerateFileSystemInfos("*", EnumerationOptions);
             if (fileSystem.Path.EndsInDirectorySeparator(path))
             {
-                return result.Select(x => new IntellisenseEntry { Name = x.Name });
+                return new CompletionResult
+                {
+                    Entries = result.Select(x => new IntellisenseEntry { Name = x.Name })
+                };
+
             }
 
-            return result.Select(x => new IntellisenseEntry { Name = $"{fileSystem.Path.DirectorySeparatorChar}{x.Name}" });
+            return new CompletionResult
+            {
+                Entries = result.Select(x => new IntellisenseEntry { Name = $"{fileSystem.Path.DirectorySeparatorChar}{x.Name}" })
+            };
         }
 
 
@@ -43,12 +50,12 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
         if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
         {
-            return [];
+            return new CompletionResult();
         }
 
         if (!fileSystem.Directory.Exists(dirPath))
         {
-            return [];
+            return new CompletionResult();
         }
 
         var dir = fileSystem.DirectoryInfo.New(dirPath);
@@ -58,6 +65,9 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             .Where(x => x.Name.StartsWith(fileName))
             .Select(x => new IntellisenseEntry { Name = x.Name });
 
-        return entries;
+        return new CompletionResult
+        {
+            Entries = entries
+        };
     }
 }
