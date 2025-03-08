@@ -18,14 +18,14 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
     {
         if (!fileSystem.Path.IsPathRooted(path))
         {
-            return new CompletionResult();
+            return CompletionResult.Empty;
         }
 
         if (fileSystem.Directory.Exists(path))
         {
             if (path.EndsWith(':'))
             {
-                return new CompletionResult();
+                return CompletionResult.Empty;
             }
             if (!fileSystem.Path.EndsInDirectorySeparator(path))
             {
@@ -42,18 +42,18 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
         if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
         {
-            return new CompletionResult();
+            return CompletionResult.Empty;
         }
 
         if (!fileSystem.Directory.Exists(dirPath))
         {
-            return new CompletionResult();
+            return CompletionResult.Empty;
         }
 
         var fileName = fileSystem.Path.GetFileName(path);
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            return new CompletionResult();
+            return CompletionResult.Empty;
         }
         var entries = GetOptionsFromFileSystem(dirPath).Where(x => x.Name.StartsWith(fileName));
 
