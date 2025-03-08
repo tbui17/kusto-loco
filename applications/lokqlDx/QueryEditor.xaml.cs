@@ -249,11 +249,13 @@ public partial class QueryEditor : UserControl
             return;
         }
 
-        if (e.Text == "/" || e.Text == "\\")
+        var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(text);
+
+        if (result.Entries.ToList() is { Count: > 0 } entries)
         {
-            var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
-            var entries = _fileSystemIntellisenseService.GetPathIntellisenseOptions(text);
-            ShowCompletions(entries);
+            result = result with { Entries = entries };
+            ShowCompletions(result);
             return;
         }
 
@@ -391,8 +393,6 @@ public class EditorHelper(TextEditor query)
         return Query.Document.GetText(line.Offset, Query.CaretOffset - line.Offset);
     }
 }
-
-
 
 public class SchemaIntellisenseProvider
 {

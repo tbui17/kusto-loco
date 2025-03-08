@@ -9,7 +9,6 @@ public interface IFileSystemIntellisenseService
 
 public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystemIntellisenseService
 {
-
     private static readonly EnumerationOptions EnumerationOptions = new()
     {
         IgnoreInaccessible = true
@@ -24,24 +23,33 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
         if (fileSystem.File.Exists(path))
         {
-            return new CompletionResult();
+            var fileName0 = fileSystem.Path.GetFileName(path);
+            return new CompletionResult
+            {
+                Entries = [new IntellisenseEntry {Name = fileName0}],
+                Rewind = fileName0.Length
+            };
         }
 
         if (fileSystem.Directory.Exists(path))
         {
-            var result = fileSystem.DirectoryInfo.New(path).EnumerateFileSystemInfos("*", EnumerationOptions);
-            if (fileSystem.Path.EndsInDirectorySeparator(path))
+            if (!fileSystem.Path.EndsInDirectorySeparator(path))
             {
+                var fileName0 = fileSystem.Path.GetFileName(path);
                 return new CompletionResult
                 {
-                    Entries = result.Select(x => new IntellisenseEntry { Name = x.Name })
+                    Entries = [new IntellisenseEntry {Name = fileName0}],
+                    Rewind = fileName0.Length
                 };
-
             }
+
+            var result = GetOptionsFromFileSystem(path);
 
             return new CompletionResult
             {
-                Entries = result.Select(x => new IntellisenseEntry { Name = $"{fileSystem.Path.DirectorySeparatorChar}{x.Name}" })
+                Entries = result,
+                Prefix = path[^1].ToString(),
+                Rewind = 1
             };
         }
 
@@ -58,16 +66,21 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return new CompletionResult();
         }
 
-        var dir = fileSystem.DirectoryInfo.New(dirPath);
-        var fileName = fileSystem.Path.TrimEndingDirectorySeparator(fileSystem.Path.GetFileName(path));
-        var entries = dir
-            .EnumerateFileSystemInfos("*", EnumerationOptions)
-            .Where(x => x.Name.StartsWith(fileName))
-            .Select(x => new IntellisenseEntry { Name = x.Name });
+        var fileName = fileSystem.Path.GetFileName(path);
+        var entries = GetOptionsFromFileSystem(dirPath).Where(x => x.Name.StartsWith(fileName));
 
         return new CompletionResult
         {
-            Entries = entries
+            Entries = entries,
+            Rewind = fileName.Length
         };
+    }
+
+    private IEnumerable<IntellisenseEntry> GetOptionsFromFileSystem(string dirPath)
+    {
+        return fileSystem
+            .DirectoryInfo.New(dirPath)
+            .EnumerateFileSystemInfos("*", EnumerationOptions)
+            .Select(x => new IntellisenseEntry { Name = x.Name });
     }
 }
