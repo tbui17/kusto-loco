@@ -21,7 +21,7 @@ public class FileSystemIntellisenseServiceWithParser(IFileSystemIntellisenseServ
     {
         if (GetIOQueryArgument(lineText) is not { } path)
         {
-            return new CompletionResult();
+            return CompletionResult.Empty;
         }
         return fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
     }
