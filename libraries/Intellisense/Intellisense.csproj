@@ -11,9 +11,6 @@
       <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" />
       <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Class1.cs" />
-    </ItemGroup>
-
+  
+  
 </Project>
