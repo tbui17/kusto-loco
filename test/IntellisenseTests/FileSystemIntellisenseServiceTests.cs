@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using FluentAssertions;
@@ -16,11 +17,13 @@ public class FileSystemIntellisenseServiceTests
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
             {
                 ["C:/File1.txt"] = new(""),
+                ["C:/File2.txt"] = new(""),
                 ["C:/Folder1/File1.txt"] = new(""),
                 ["C:/Folder1/File2.txt"] = new(""),
                 ["C:/Folder1/MyFile1.txt"] = new(""),
                 ["C:/Folder1/MyFile2.txt"] = new(""),
-                ["C:/Folder1/Folder2"] = new MockDirectoryData()
+                ["C:/Folder1/Folder2"] = new MockDirectoryData(),
+                ["C:/Folder2/File1.txt"] = new("")
             }
         );
         _fileSystemIntellisenseService = new FileSystemIntellisenseService(fileSystem);
@@ -64,8 +67,8 @@ public class FileSystemIntellisenseServiceTests
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/");
 
-        result.Prefix.Should().Be("/");
-        result.Rewind.Should().Be(1);
+        result.Prefix.Should().Be("");
+        result.Rewind.Should().Be(0);
 
         result
             .Entries
@@ -81,6 +84,31 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
+    public void
+        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffixAtRoot_DirectoryChildren()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/");
+
+        result.Prefix.Should().Be("");
+        result.Rewind.Should().Be(0);
+
+        result
+            .Entries
+            .Select(x => x.Name)
+            .Where(x => x is not "temp") // internal mock impl?
+            .Should()
+            .BeEquivalentTo("File1.txt", "File2.txt","Folder1","Folder2");
+    }
+
+    [Fact]
+    public void
+        GetPathIntellisenseOptions_ValidDirNoDirectorySeparatorSuffixAtRoot_Empty()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:");
+        result.Entries.Should().BeEmpty();
+    }
+
+    [Fact]
     public void GetPathIntellisenseOptions_ValidFilePath_SingleFile()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/File1.txt");
@@ -91,12 +119,39 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_PartialPathInput_PathsStartingWithInput()
+    public void GetPathIntellisenseOptions_PartialFileInput_PathsStartingWithInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/MyF");
 
         result.Rewind.Should().Be(3);
         result.Entries.Select(x => x.Name).Should().BeEquivalentTo("MyFile1.txt", "MyFile2.txt");
+    }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_PartialDirInputAtRoot_PathsStartingWithInput()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/Fol");
+
+        result.Rewind.Should().Be("Fol".Length);
+        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("Folder1", "Folder2");
+    }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_PartialFileInputAtRoot_PathsStartingWithInput()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/Fil");
+
+        result.Rewind.Should().Be("Fil".Length);
+        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt");
+    }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_InputAtRoot_PathsStartingWithInput()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/F");
+
+        result.Rewind.Should().Be("F".Length);
+        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt","Folder1","Folder2");
     }
 
     [Fact]
@@ -123,4 +178,32 @@ public class FileSystemIntellisenseServiceTests
 
         results.Should().BeEmpty();
     }
+}
+
+
+public class FileSystemIntellisenseServiceIntegrationTests
+{
+    private readonly FileSystemIntellisenseService _fileSystemIntellisenseService;
+
+    public FileSystemIntellisenseServiceIntegrationTests()
+    {
+        _fileSystemIntellisenseService = new FileSystemIntellisenseService(new FileSystem());
+    }
+
+    [Fact]
+    public void
+        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffixAtRoot_DirectoryChildren()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/");
+
+        result.Prefix.Should().Be("");
+        result.Rewind.Should().Be(0);
+
+        result
+            .Entries
+            .Take(1)
+            .Should()
+            .NotBeEmpty();
+    }
+
 }
