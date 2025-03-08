@@ -21,13 +21,12 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return new CompletionResult();
         }
 
-        if (fileSystem.File.Exists(path))
-        {
-            return CreateSingleEntryCompletionResult(path);
-        }
-
         if (fileSystem.Directory.Exists(path))
         {
+            if (path.EndsWith(':'))
+            {
+                return new CompletionResult();
+            }
             if (!fileSystem.Path.EndsInDirectorySeparator(path))
             {
                 return CreateSingleEntryCompletionResult(path);
@@ -37,14 +36,9 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
             return new CompletionResult
             {
-                Entries = result,
-                Prefix = path[^1].ToString(),
-                Rewind = 1
+                Entries = result
             };
         }
-
-
-        // partial or invalid paths
 
         if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
         {
@@ -57,6 +51,10 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         }
 
         var fileName = fileSystem.Path.GetFileName(path);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return new CompletionResult();
+        }
         var entries = GetOptionsFromFileSystem(dirPath).Where(x => x.Name.StartsWith(fileName));
 
         return new CompletionResult
