@@ -23,24 +23,14 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
         if (fileSystem.File.Exists(path))
         {
-            var fileName0 = fileSystem.Path.GetFileName(path);
-            return new CompletionResult
-            {
-                Entries = [new IntellisenseEntry {Name = fileName0}],
-                Rewind = fileName0.Length
-            };
+            return CreateSingleEntryCompletionResult(path);
         }
 
         if (fileSystem.Directory.Exists(path))
         {
             if (!fileSystem.Path.EndsInDirectorySeparator(path))
             {
-                var fileName0 = fileSystem.Path.GetFileName(path);
-                return new CompletionResult
-                {
-                    Entries = [new IntellisenseEntry {Name = fileName0}],
-                    Rewind = fileName0.Length
-                };
+                return CreateSingleEntryCompletionResult(path);
             }
 
             var result = GetOptionsFromFileSystem(path);
@@ -72,6 +62,16 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         return new CompletionResult
         {
             Entries = entries,
+            Rewind = fileName.Length
+        };
+    }
+
+    private CompletionResult CreateSingleEntryCompletionResult(string path)
+    {
+        var fileName = fileSystem.Path.GetFileName(path);
+        return new CompletionResult
+        {
+            Entries = [new IntellisenseEntry {Name = fileName}],
             Rewind = fileName.Length
         };
     }
