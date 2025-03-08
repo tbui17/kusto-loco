@@ -24,6 +24,10 @@ public class FileSystemIntellisenseServiceTests
                 ["C:/Folder1/MyFile2.txt"] = new(""),
                 ["C:/Folder1/Folder2"] = new MockDirectoryData(),
                 ["C:/Folder2/File1.txt"] = new("")
+            },
+            new MockFileSystemOptions
+            {
+                CreateDefaultTempDir = false
             }
         );
         _fileSystemIntellisenseService = new FileSystemIntellisenseService(fileSystem);
@@ -95,9 +99,8 @@ public class FileSystemIntellisenseServiceTests
         result
             .Entries
             .Select(x => x.Name)
-            .Where(x => x is not "temp") // internal mock impl?
             .Should()
-            .BeEquivalentTo("File1.txt", "File2.txt","Folder1","Folder2");
+            .BeEquivalentTo("File1.txt", "File2.txt", "Folder1", "Folder2");
     }
 
     [Fact]
@@ -151,7 +154,7 @@ public class FileSystemIntellisenseServiceTests
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/F");
 
         result.Rewind.Should().Be("F".Length);
-        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt","Folder1","Folder2");
+        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt", "Folder1", "Folder2");
     }
 
     [Fact]
@@ -180,7 +183,6 @@ public class FileSystemIntellisenseServiceTests
     }
 }
 
-
 public class FileSystemIntellisenseServiceIntegrationTests
 {
     private readonly FileSystemIntellisenseService _fileSystemIntellisenseService;
@@ -205,5 +207,4 @@ public class FileSystemIntellisenseServiceIntegrationTests
             .Should()
             .NotBeEmpty();
     }
-
 }
