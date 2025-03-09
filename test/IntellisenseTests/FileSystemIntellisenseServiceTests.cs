@@ -195,6 +195,7 @@ public class FileSystemIntellisenseServiceIntegrationTests
     public void
         GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffixAtRoot_HasChild()
     {
+        // https://github.com/TestableIO/System.IO.Abstractions/issues/1244
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/");
 
         result.Prefix.Should().Be("");
