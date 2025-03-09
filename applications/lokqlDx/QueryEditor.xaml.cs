@@ -243,17 +243,18 @@ public partial class QueryEditor : UserControl
         {
             return false;
         }
-        if (_fileIoCommandParser.Parse(_editorHelper.GetCurrentLineText()) is { } path)
+
+        if (_fileIoCommandParser.Parse(_editorHelper.GetCurrentLineText()) is not { } path)
         {
-            var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
-            if (result.Entries.ToList() is { Count: > 0 } entries)
-            {
-                result = result with { Entries = entries };
-                ShowCompletions(result.Entries, result.Prefix, result.Rewind);
-                return true;
-            }
+            return false;
         }
-        return false;
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
+        if (result.Entries.ToList() is not { Count: > 0 } entries)
+        {
+            return false;
+        }
+        ShowCompletions(entries, result.Prefix, result.Rewind);
+        return true;
     }
 
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
