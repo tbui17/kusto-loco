@@ -237,6 +237,25 @@ public partial class QueryEditor : UserControl
         _completionWindow.Closed += delegate { _completionWindow = null; };
     }
 
+    private bool ShowPathCompletions()
+    {
+        if (_completionWindow is not null)
+        {
+            return false;
+        }
+        if (_fileIoCommandParser.Parse(_editorHelper.GetCurrentLineText()) is { } path)
+        {
+            var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
+            if (result.Entries.ToList() is { Count: > 0 } entries)
+            {
+                result = result with { Entries = entries };
+                ShowCompletions(result.Entries, result.Prefix, result.Rewind);
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
         if (_completionWindow != null && !_completionWindow.CompletionList.ListBox.HasItems)
@@ -245,15 +264,9 @@ public partial class QueryEditor : UserControl
             return;
         }
 
-        if (_fileIoCommandParser.Parse(_editorHelper.GetCurrentLineText()) is { } path)
+        if (ShowPathCompletions())
         {
-            var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
-            if (result.Entries.ToList() is { Count: > 0 } entries)
-            {
-                result = result with { Entries = entries };
-                ShowCompletions(result.Entries, result.Prefix, result.Rewind);
-                return;
-            }
+            return;
         }
 
         if (e.Text == ".")
