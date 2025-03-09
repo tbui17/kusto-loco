@@ -10,17 +10,7 @@ public class FileIoCommandParserTests
     private readonly FileIoCommandParser _parser = new();
 
     [Fact]
-    public void LastArgumentIsRootedPath_QuotedRootedPath_True()
-    {
-        const string text = """
-                            .load "/myFile.txt"
-                            """;
-        var command = _parser.Parse(text);
-        command.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void Parse_QuotedRootedPath_True()
+    public void Parse_Quoted_ExtractsFileFromQuotes()
     {
         const string text = """
                             .load "/myFile.txt"
@@ -43,7 +33,7 @@ public class FileIoCommandParserTests
                 .load /asjdio /admsd q "asdj" asdq /abcd
                 """, "/abcd")]
     [Theory]
-    public void LastArgumentIsRootedPath_ValidCases_True(string text, string expected)
+    public void Parse_ValidCases_GetsFileName(string text, string expected)
     {
         var command = _parser.Parse(text);
         command.Should().Be(expected);
@@ -54,7 +44,7 @@ public class FileIoCommandParserTests
     [InlineData(".load /myFile.txt --f")]
     [InlineData(".Load /myFile.txt")]
     [Theory]
-    public void LastArgumentIsRootedPath_InvalidCases_False(string text)
+    public void Parse_InvalidCases_Null(string text)
     {
         var command = _parser.Parse(text);
         command.Should().BeNull();
