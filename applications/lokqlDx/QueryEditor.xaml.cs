@@ -35,6 +35,7 @@ public partial class QueryEditor : UserControl
     private readonly EditorHelper _editorHelper;
     private readonly SchemaIntellisenseProvider _schemaIntellisenseProvider = new();
     private readonly IFileSystemIntellisenseService _fileSystemIntellisenseService = FileSystemIntellisenseServiceProvider.GetFileSystemIntellisenseService();
+    private readonly FileIoCommandParser _fileIoCommandParser = new();
 
     private CompletionWindow? _completionWindow;
 
@@ -236,11 +237,6 @@ public partial class QueryEditor : UserControl
         _completionWindow.Closed += delegate { _completionWindow = null; };
     }
 
-    private void ShowCompletions(CompletionResult result)
-    {
-        ShowCompletions(result.Entries.ToList(),result.Prefix,result.Rewind);
-    }
-
     private void textEditor_TextArea_TextEntered(object sender, TextCompositionEventArgs e)
     {
         if (_completionWindow != null && !_completionWindow.CompletionList.ListBox.HasItems)
@@ -249,14 +245,15 @@ public partial class QueryEditor : UserControl
             return;
         }
 
-        var text = _editorHelper.TextInLine(_editorHelper.LineAtCaret().LineNumber);
-        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(text);
-
-        if (result.Entries.ToList() is { Count: > 0 } entries)
+        if (_fileIoCommandParser.Parse(_editorHelper.GetCurrentLineText()) is { } path)
         {
-            result = result with { Entries = entries };
-            ShowCompletions(result);
-            return;
+            var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
+            if (result.Entries.ToList() is { Count: > 0 } entries)
+            {
+                result = result with { Entries = entries };
+                ShowCompletions(result.Entries, result.Prefix, result.Rewind);
+                return;
+            }
         }
 
         if (e.Text == ".")
@@ -380,6 +377,11 @@ public class EditorHelper(TextEditor query)
     public string TextInLine(int line)
     {
         return GetText(Query.Document.GetLineByNumber(line));
+    }
+
+    public string GetCurrentLineText()
+    {
+        return TextInLine(LineAtCaret().LineNumber);
     }
 
     public DocumentLine LineAtCaret()
