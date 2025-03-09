@@ -51,7 +51,7 @@ public class FileSystemIntellisenseServiceTests
 
     [Fact]
     public void
-        GetPathIntellisenseOptions_ValidDirNoDirectorySeparatorSuffix_SingleDirectory()
+        GetPathIntellisenseOptions_ValidDirNoDirectorySeparator_SiblingPathsMatchingInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1");
 
@@ -59,10 +59,9 @@ public class FileSystemIntellisenseServiceTests
         result.Prefix.Should().Be(string.Empty);
 
         result
-            .Entries.Should()
-            .ContainSingle()
-            .Which.Name.Should()
-            .Be("Folder1");
+            .Entries.Select(x => x.Name)
+            .Should()
+            .BeEquivalentTo("Folder1","Folder2","File1.txt","File2.txt");
     }
 
     [Fact]
@@ -112,17 +111,17 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_ValidFilePath_SingleFile()
+    public void GetPathIntellisenseOptions_ExclusiveValidFilePath_SingleFile()
     {
-        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/File1.txt");
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/MyFile1.txt");
 
-        result.Rewind.Should().Be("File1.txt".Length);
+        result.Rewind.Should().Be("MyFile1.txt".Length);
         result.Prefix.Should().Be(string.Empty);
-        result.Entries.Should().ContainSingle().Which.Name.Should().Be("File1.txt");
+        result.Entries.Should().ContainSingle().Which.Name.Should().Be("MyFile1.txt");
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_PartialFileInput_PathsStartingWithInput()
+    public void GetPathIntellisenseOptions_PartialFileInput_PathsContainingInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/Folder1/MyF");
 
@@ -131,7 +130,7 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_PartialDirInputAtRoot_PathsStartingWithInput()
+    public void GetPathIntellisenseOptions_PartialDirInputAtRoot_PathsContainingInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/Fol");
 
@@ -140,7 +139,7 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_PartialFileInputAtRoot_PathsStartingWithInput()
+    public void GetPathIntellisenseOptions_PartialFileInputAtRoot_PathsContainingInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/Fil");
 
@@ -149,7 +148,7 @@ public class FileSystemIntellisenseServiceTests
     }
 
     [Fact]
-    public void GetPathIntellisenseOptions_InputAtRoot_PathsStartingWithInput()
+    public void GetPathIntellisenseOptions_InputAtRoot_PathsContainingInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("C:/F");
 
@@ -194,7 +193,7 @@ public class FileSystemIntellisenseServiceIntegrationTests
 
     [Fact]
     public void
-        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffixAtRoot_DirectoryChildren()
+        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffixAtRoot_HasChild()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions("/");
 
