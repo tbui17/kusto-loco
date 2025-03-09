@@ -15,8 +15,9 @@ public class FileIoCommandParserTests
         const string text = """
                             .load "/myFile.txt"
                             """;
-        var command = _parser.Parse(text);
-        command.Should().NotBeNull();
+        var path = _parser.ParseRootedPathFromLastArg(text);
+        path?.Value.Should().Be("/myFile.txt");
+
     }
 
     [InlineData(".load /myFile.txt", "/myFile.txt")]
@@ -35,8 +36,8 @@ public class FileIoCommandParserTests
     [Theory]
     public void Parse_ValidCases_GetsFileName(string text, string expected)
     {
-        var command = _parser.Parse(text);
-        command.Should().Be(expected);
+        var path = _parser.ParseRootedPathFromLastArg(text);
+        path?.Value.Should().Be(expected);
     }
 
     [InlineData(".loada /myFile.txt")]
@@ -46,7 +47,7 @@ public class FileIoCommandParserTests
     [Theory]
     public void Parse_InvalidCases_Null(string text)
     {
-        var command = _parser.Parse(text);
-        command.Should().BeNull();
+        var path = _parser.ParseRootedPathFromLastArg(text);
+        path.Should().BeNull();
     }
 }

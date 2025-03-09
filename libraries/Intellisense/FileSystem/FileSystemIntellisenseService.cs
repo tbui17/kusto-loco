@@ -5,7 +5,7 @@ namespace Intellisense.FileSystem;
 
 public interface IFileSystemIntellisenseService
 {
-    CompletionResult GetPathIntellisenseOptions(string path);
+    CompletionResult GetPathIntellisenseOptions(RootedPath rootedPath);
 }
 
 public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystemIntellisenseService
@@ -15,13 +15,9 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         IgnoreInaccessible = true
     };
 
-  public CompletionResult GetPathIntellisenseOptions(string path)
+    public CompletionResult GetPathIntellisenseOptions(RootedPath rootedPath)
     {
-        if (!fileSystem.Path.IsPathRooted(path))
-        {
-            return CompletionResult.Empty;
-        }
-
+        var path = rootedPath.Value;
         if (IsRoot(path))
         {
             return GetRootResults(path);
@@ -32,16 +28,18 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return GetDirectoryResults(path);
         }
 
-        return GetSiblings(path);
+        return GetParentResults(path);
     }
 
-    private CompletionResult GetSiblings(string path)
+    private CompletionResult GetParentResults(string path)
     {
         if (GetDirAndFileNames(path) is not { } pair)
         {
             return CompletionResult.Empty;
         }
-        var entries = GetOptionsFromFileSystem(pair.ParentPath).Where(x => x.Name.Contains(pair.CurrentPath,StringComparison.CurrentCultureIgnoreCase));
+
+        var entries = GetOptionsFromFileSystem(pair.ParentPath)
+            .Where(x => x.Name.Contains(pair.CurrentPath, StringComparison.CurrentCultureIgnoreCase));
 
         return new CompletionResult
         {
@@ -65,7 +63,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
     private CompletionResult GetDirectoryResults(string path)
     {
-        if (fileSystem.Path.EndsInDirectorySeparator(path))
+        if (Path.EndsInDirectorySeparator(path))
         {
             return new CompletionResult
             {
@@ -87,12 +85,13 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
     private bool IsDirectory(string path)
     {
+        // https://github.com/TestableIO/System.IO.Abstractions/issues/1244
         return fileSystem.DirectoryInfo.New(path).Exists;
     }
 
     private (string ParentPath, string CurrentPath)? GetDirAndFileNames(string path)
     {
-        if (fileSystem.Path.GetDirectoryName(path) is not { } dirName)
+        if (Path.GetDirectoryName(path) is not { } dirName)
         {
             return null;
         }
@@ -102,7 +101,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return null;
         }
 
-        var fileName = fileSystem.Path.GetFileName(path);
+        var fileName = Path.GetFileName(path);
         if (string.IsNullOrWhiteSpace(fileName))
         {
             return null;
@@ -113,7 +112,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
     private bool IsRoot(string path)
     {
-        return fileSystem.Path.IsPathRooted(path) && fileSystem.Path.GetDirectoryName(path) is null && IsDirectory(path);
+        return Path.GetDirectoryName(path) is null && IsDirectory(path);
     }
 
     private IEnumerable<IntellisenseEntry> GetOptionsFromFileSystem(string dirPath)

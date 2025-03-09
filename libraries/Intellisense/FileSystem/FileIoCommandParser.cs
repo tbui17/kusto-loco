@@ -4,7 +4,7 @@ namespace Intellisense.FileSystem;
 
 public class FileIoCommandParser
 {
-    public string? Parse(string lineText)
+    public RootedPath? ParseRootedPathFromLastArg(string lineText)
     {
         var args = CommandLineStringSplitter.Instance.Split(lineText).ToList();
         if (args.Count < 2)
@@ -17,12 +17,6 @@ public class FileIoCommandParser
             return null;
         }
 
-        var lastArg = args[^1];
-        if (!Path.IsPathRooted(lastArg))
-        {
-            return null;
-        }
-
-        return lastArg;
+        return RootedPath.Create(args[^1]);
     }
 }

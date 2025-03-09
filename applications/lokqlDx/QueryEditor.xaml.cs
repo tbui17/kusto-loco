@@ -244,7 +244,7 @@ public partial class QueryEditor : UserControl
             return false;
         }
 
-        if (_fileIoCommandParser.Parse(_editorHelper.GetCurrentLineText()) is not { } path)
+        if (_fileIoCommandParser.ParseRootedPathFromLastArg(_editorHelper.GetCurrentLineText()) is not { } path)
         {
             return false;
         }
