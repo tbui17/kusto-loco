@@ -15,7 +15,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
         IgnoreInaccessible = true
     };
 
-    public CompletionResult GetPathIntellisenseOptions(string path)
+  public CompletionResult GetPathIntellisenseOptions(string path)
     {
         if (!fileSystem.Path.IsPathRooted(path))
         {
@@ -24,74 +24,80 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
 
         if (IsRoot(path))
         {
-            if (path.EndsWith(':'))
-            {
-                return CompletionResult.Empty;
-            }
+            return GetRootResults(path);
+        }
 
+        if (IsDirectory(path))
+        {
+            return GetDirectoryResults(path);
+        }
+
+        return GetSiblings(path);
+    }
+
+    private CompletionResult GetSiblings(string path)
+    {
+        if (GetDirAndFileNames(path) is not { } pair)
+        {
+            return CompletionResult.Empty;
+        }
+        var entries = GetOptionsFromFileSystem(pair.ParentPath).Where(x => x.Name.Contains(pair.CurrentPath,StringComparison.CurrentCultureIgnoreCase));
+
+        return new CompletionResult
+        {
+            Entries = entries,
+            Rewind = pair.CurrentPath.Length
+        };
+    }
+
+    private CompletionResult GetRootResults(string path)
+    {
+        if (path.EndsWith(':'))
+        {
+            return CompletionResult.Empty;
+        }
+
+        return new CompletionResult
+        {
+            Entries = GetOptionsFromFileSystem(path)
+        };
+    }
+
+    private CompletionResult GetDirectoryResults(string path)
+    {
+        if (fileSystem.Path.EndsInDirectorySeparator(path))
+        {
             return new CompletionResult
             {
                 Entries = GetOptionsFromFileSystem(path)
             };
         }
 
-        if (IsDirectory(path))
-        {
-            if (fileSystem.Path.EndsInDirectorySeparator(path))
-            {
-                return new CompletionResult
-                {
-                    Entries = GetOptionsFromFileSystem(path)
-                };
-            }
-
-            if (GetDirAndFileNames(path) is not { } pair2)
-            {
-                throw new UnreachableException($"Did not expect to fail to retrieve dir and file name for path {path}");
-            }
-
-            return new CompletionResult
-            {
-                Entries = GetOptionsFromFileSystem(pair2.DirName),
-                Rewind = pair2.FileName.Length
-            };
-        }
-
         if (GetDirAndFileNames(path) is not { } pair)
         {
-            return CompletionResult.Empty;
+            throw new UnreachableException($"Did not expect to fail to retrieve dir and file name for path {path}");
         }
-        var entries = GetOptionsFromFileSystem(pair.DirName).Where(x => x.Name.Contains(pair.FileName,StringComparison.CurrentCultureIgnoreCase));
 
         return new CompletionResult
         {
-            Entries = entries,
-            Rewind = pair.FileName.Length
+            Entries = GetOptionsFromFileSystem(pair.ParentPath),
+            Rewind = pair.CurrentPath.Length
         };
     }
 
     private bool IsDirectory(string path)
     {
-        if (fileSystem.Directory.Exists(path))
-        {
-            return true;
-        }
-        if (path is "/" or "\\")
-        {
-            return fileSystem.Directory.Exists("C:/");
-        }
-
-        return false;
+        return fileSystem.DirectoryInfo.New(path).Exists;
     }
 
-    private (string DirName, string FileName)? GetDirAndFileNames(string path)
+    private (string ParentPath, string CurrentPath)? GetDirAndFileNames(string path)
     {
-        if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
+        if (fileSystem.Path.GetDirectoryName(path) is not { } dirName)
         {
             return null;
         }
 
-        if (!IsDirectory(dirPath))
+        if (!IsDirectory(dirName))
         {
             return null;
         }
@@ -102,7 +108,7 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return null;
         }
 
-        return (dirPath, fileName);
+        return (dirName, fileName);
     }
 
     private bool IsRoot(string path)
