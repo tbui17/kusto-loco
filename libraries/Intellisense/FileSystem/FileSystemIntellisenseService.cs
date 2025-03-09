@@ -1,4 +1,5 @@
-﻿using System.IO.Abstractions;
+﻿using System.Diagnostics;
+using System.IO.Abstractions;
 
 namespace Intellisense.FileSystem;
 
@@ -21,57 +22,92 @@ public class FileSystemIntellisenseService(IFileSystem fileSystem) : IFileSystem
             return CompletionResult.Empty;
         }
 
-        if (fileSystem.Directory.Exists(path))
+        if (IsRoot(path))
         {
             if (path.EndsWith(':'))
             {
                 return CompletionResult.Empty;
             }
-            if (!fileSystem.Path.EndsInDirectorySeparator(path))
-            {
-                return CreateSingleEntryCompletionResult(path);
-            }
-
-            var result = GetOptionsFromFileSystem(path);
 
             return new CompletionResult
             {
-                Entries = result
+                Entries = GetOptionsFromFileSystem(path)
             };
         }
 
-        if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
+        if (IsDirectory(path))
+        {
+            if (fileSystem.Path.EndsInDirectorySeparator(path))
+            {
+                return new CompletionResult
+                {
+                    Entries = GetOptionsFromFileSystem(path)
+                };
+            }
+
+            if (GetDirAndFileNames(path) is not { } pair2)
+            {
+                throw new UnreachableException($"Did not expect to fail to retrieve dir and file name for path {path}");
+            }
+
+            return new CompletionResult
+            {
+                Entries = GetOptionsFromFileSystem(pair2.DirName),
+                Rewind = pair2.FileName.Length
+            };
+        }
+
+        if (GetDirAndFileNames(path) is not { } pair)
         {
             return CompletionResult.Empty;
         }
+        var entries = GetOptionsFromFileSystem(pair.DirName).Where(x => x.Name.Contains(pair.FileName,StringComparison.CurrentCultureIgnoreCase));
 
-        if (!fileSystem.Directory.Exists(dirPath))
+        return new CompletionResult
         {
-            return CompletionResult.Empty;
+            Entries = entries,
+            Rewind = pair.FileName.Length
+        };
+    }
+
+    private bool IsDirectory(string path)
+    {
+        if (fileSystem.Directory.Exists(path))
+        {
+            return true;
+        }
+        if (path is "/" or "\\")
+        {
+            return fileSystem.Directory.Exists("C:/");
+        }
+
+        return false;
+    }
+
+    private (string DirName, string FileName)? GetDirAndFileNames(string path)
+    {
+        if (fileSystem.Path.GetDirectoryName(path) is not { } dirPath)
+        {
+            return null;
+        }
+
+        if (!IsDirectory(dirPath))
+        {
+            return null;
         }
 
         var fileName = fileSystem.Path.GetFileName(path);
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            return CompletionResult.Empty;
+            return null;
         }
-        var entries = GetOptionsFromFileSystem(dirPath).Where(x => x.Name.StartsWith(fileName));
 
-        return new CompletionResult
-        {
-            Entries = entries,
-            Rewind = fileName.Length
-        };
+        return (dirPath, fileName);
     }
 
-    private CompletionResult CreateSingleEntryCompletionResult(string path)
+    private bool IsRoot(string path)
     {
-        var fileName = fileSystem.Path.GetFileName(path);
-        return new CompletionResult
-        {
-            Entries = [new IntellisenseEntry {Name = fileName}],
-            Rewind = fileName.Length
-        };
+        return fileSystem.Path.IsPathRooted(path) && fileSystem.Path.GetDirectoryName(path) is null && IsDirectory(path);
     }
 
     private IEnumerable<IntellisenseEntry> GetOptionsFromFileSystem(string dirPath)
