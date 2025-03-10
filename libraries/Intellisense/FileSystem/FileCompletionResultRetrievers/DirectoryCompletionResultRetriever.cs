@@ -3,9 +3,9 @@
 namespace Intellisense.FileSystem.FileCompletionResultRetrievers;
 
 internal class DirectoryCompletionResultRetriever(ICompletionResultFactory completionResultFactory)
-    : FileCompletionResultRetriever
+    : IFileCompletionResultRetriever
 {
-    internal override CompletionResult GetCompletionResult(string path)
+    public CompletionResult GetCompletionResult(string path)
     {
         if (Path.EndsInDirectorySeparator(path))
         {

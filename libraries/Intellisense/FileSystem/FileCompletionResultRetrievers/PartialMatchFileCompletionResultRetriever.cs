@@ -3,9 +3,9 @@
 internal class PartialMatchFileCompletionResultRetriever(
     IFileSystemReader reader,
     ICompletionResultFactory completionResultFactory
-    ) : FileCompletionResultRetriever
+    ) : IFileCompletionResultRetriever
 {
-    internal override CompletionResult GetCompletionResult(string path)
+    public CompletionResult GetCompletionResult(string path)
     {
         if (ParentChildPathPair.Create(path) is not { } pair)
         {

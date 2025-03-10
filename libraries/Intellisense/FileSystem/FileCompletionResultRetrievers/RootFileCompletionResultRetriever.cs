@@ -1,9 +1,9 @@
 ﻿namespace Intellisense.FileSystem.FileCompletionResultRetrievers;
 
 internal class RootFileCompletionResultRetriever(ICompletionResultFactory completionResultFactory)
-    : FileCompletionResultRetriever
+    : IFileCompletionResultRetriever
 {
-    internal override CompletionResult GetCompletionResult(string path)
+    public CompletionResult GetCompletionResult(string path)
     {
         if (path.EndsWith(':'))
         {

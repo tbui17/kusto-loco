@@ -9,7 +9,7 @@ public interface IFileSystemIntellisenseService
 
 public class FileSystemIntellisenseService(IFileSystemReader reader, ICompletionResultFactory completionResultFactory) : IFileSystemIntellisenseService
 {
-    private FileCompletionResultRetriever CreateRetriever(RootedPath rootedPath)
+    private IFileCompletionResultRetriever CreateRetriever(RootedPath rootedPath)
     {
         var path = rootedPath.Value;
         if (reader.IsRoot(path))
