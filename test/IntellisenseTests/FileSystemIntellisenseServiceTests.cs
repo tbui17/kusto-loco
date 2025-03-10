@@ -22,7 +22,8 @@ public class FileSystemIntellisenseServiceTests
                 ["C:/Folder1/File2.txt"] = new(""),
                 ["C:/Folder1/MyFile1.txt"] = new(""),
                 ["C:/Folder1/MyFile2.txt"] = new(""),
-                ["C:/Folder1/Folder2"] = new MockDirectoryData(),
+                ["C:/Folder1/Folder2/Folder3/Folder4"] = new MockDirectoryData(),
+                ["C:/Folder1/Folder2/File5.txt"] = new(""),
                 ["C:/Folder2/File1.txt"] = new("")
             },
             new MockFileSystemOptions
@@ -171,6 +172,29 @@ public class FileSystemIntellisenseServiceTests
         var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:")).Entries;
 
         results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_NonexistentRootPathAtRoot_Empty()
+    {
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:/Abc")).Entries;
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_RootedRelativePath_RelativeChildren()
+    {
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/Folder1/Folder2/Folder3/Folder4/../../"));
+
+        result.Prefix.Should().Be("");
+        result.Rewind.Should().Be(0);
+
+        result
+            .Entries
+            .Select(x => x.Name)
+            .Should()
+            .BeEquivalentTo("File5.txt", "Folder3");
     }
 }
 

@@ -17,7 +17,16 @@ public class FileIoCommandParserTests
                             """;
         var path = _parser.ParseRootedPathFromLastArg(text);
         path?.Value.Should().Be("/myFile.txt");
+    }
 
+    [Fact]
+    public void Parse_RootedPathContainsRelativePath_GetsFile()
+    {
+        const string text = """
+                            .load "/myFolder../myFile.txt"
+                            """;
+        var path = _parser.ParseRootedPathFromLastArg(text);
+        path?.Value.Should().Be("/myFolder../myFile.txt");
     }
 
     [InlineData(".load /myFile.txt", "/myFile.txt")]
