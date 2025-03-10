@@ -221,7 +221,7 @@ public partial class QueryEditor : UserControl
         SearchPanel.Install(Query);
     }
 
-    private void ShowCompletions(IEnumerable<IntellisenseEntry> completions, string prefix, int rewind)
+    private void ShowCompletions(IEnumerable<IntellisenseEntry> completions, string prefix, int rewind, Action<CompletionWindow>? action = null)
     {
         if (!completions.Any())
             return;
@@ -233,8 +233,10 @@ public partial class QueryEditor : UserControl
         IList<ICompletionData> data = _completionWindow.CompletionList.CompletionData;
         foreach (var k in completions.OrderBy(k => k.Name))
             data.Add(new MyCompletionData(k, prefix, rewind));
-        _completionWindow.Show();
+
         _completionWindow.Closed += delegate { _completionWindow = null; };
+        action?.Invoke(_completionWindow);
+        _completionWindow?.Show();
     }
 
     private bool ShowPathCompletions()
@@ -253,7 +255,25 @@ public partial class QueryEditor : UserControl
         {
             return false;
         }
-        ShowCompletions(entries, result.Prefix, result.Rewind);
+
+        ShowCompletions(
+            entries,
+            result.Prefix,
+            0,
+            listBox =>
+            {
+                listBox.StartOffset = Query.CaretOffset - result.Rewind;
+                if (result is FilterCompletionResult f)
+                {
+                    listBox.CompletionList.SelectItem(f.Filter);
+                    if (!listBox.CompletionList.ListBox.HasItems)
+                    {
+                        listBox.Close();
+                    }
+
+                }
+
+            });
         return true;
     }
 
