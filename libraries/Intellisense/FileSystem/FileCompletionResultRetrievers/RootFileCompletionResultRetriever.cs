@@ -3,8 +3,9 @@
 internal class RootFileCompletionResultRetriever(ICompletionResultFactory completionResultFactory)
     : IFileCompletionResultRetriever
 {
-    public CompletionResult GetCompletionResult(string path)
+    public CompletionResult GetCompletionResult(RootedPath rootedPath)
     {
+        var path = rootedPath.Value;
         if (path.EndsWith(':'))
         {
             return completionResultFactory.Create();

@@ -5,8 +5,9 @@ namespace Intellisense.FileSystem.FileCompletionResultRetrievers;
 internal class DirectoryCompletionResultRetriever(ICompletionResultFactory completionResultFactory)
     : IFileCompletionResultRetriever
 {
-    public CompletionResult GetCompletionResult(string path)
+    public CompletionResult GetCompletionResult(RootedPath rootedPath)
     {
+        var path = rootedPath.Value;
         if (Path.EndsInDirectorySeparator(path))
         {
             return completionResultFactory.Create(path);

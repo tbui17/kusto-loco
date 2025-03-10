@@ -27,6 +27,6 @@ public class FileSystemIntellisenseService(IFileSystemReader reader, ICompletion
 
     public CompletionResult GetPathIntellisenseOptions(RootedPath rootedPath)
     {
-        return CreateRetriever(rootedPath).GetCompletionResult(rootedPath.Value);
+        return CreateRetriever(rootedPath).GetCompletionResult(rootedPath);
     }
 }

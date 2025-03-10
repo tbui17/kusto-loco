@@ -2,5 +2,5 @@
 
 internal interface IFileCompletionResultRetriever
 {
-    public CompletionResult GetCompletionResult(string path);
+    public CompletionResult GetCompletionResult(RootedPath rootedPath);
 }
