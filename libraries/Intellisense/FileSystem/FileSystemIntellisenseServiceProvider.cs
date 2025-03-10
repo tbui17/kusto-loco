@@ -5,6 +5,6 @@ public static class FileSystemIntellisenseServiceProvider
     private static readonly System.IO.Abstractions.FileSystem FileSystem = new();
     public static IFileSystemIntellisenseService GetFileSystemIntellisenseService()
     {
-        return new FileSystemIntellisenseService(FileSystem);
+        return new FileSystemIntellisenseService(new FileSystemReader(FileSystem));
     }
 }

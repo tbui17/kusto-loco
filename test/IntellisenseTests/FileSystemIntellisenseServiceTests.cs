@@ -30,7 +30,7 @@ public class FileSystemIntellisenseServiceTests
                 CreateDefaultTempDir = false
             }
         );
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(fileSystem);
+        _fileSystemIntellisenseService = new FileSystemIntellisenseService(new FileSystemReader(fileSystem));
     }
 
     [Fact]
@@ -172,6 +172,14 @@ public class FileSystemIntellisenseServiceTests
 
         results.Should().BeEmpty();
     }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_NonexistentRootPathAtRoot_Empty()
+    {
+        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:/Abc")).Entries;
+
+        results.Should().BeEmpty();
+    }
 }
 
 public class FileSystemIntellisenseServiceIntegrationTests
@@ -180,7 +188,7 @@ public class FileSystemIntellisenseServiceIntegrationTests
 
     public FileSystemIntellisenseServiceIntegrationTests()
     {
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(new FileSystem());
+        _fileSystemIntellisenseService = new FileSystemIntellisenseService(new FileSystemReader(new FileSystem()));
     }
 
     [Fact]
