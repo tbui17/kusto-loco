@@ -18,11 +18,6 @@ internal class PartialMatchFileCompletionResultRetriever(
             return completionResultFactory.Create();
         }
 
-        var result = completionResultFactory.Create(pair);
-
-        return result with
-        {
-            Entries = result.Entries.Where(x => x.Name.Contains(pair.CurrentPath, StringComparison.CurrentCultureIgnoreCase))
-        };
+        return completionResultFactory.Create(pair);
     }
 }

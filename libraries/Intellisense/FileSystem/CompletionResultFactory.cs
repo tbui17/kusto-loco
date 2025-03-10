@@ -20,16 +20,17 @@ internal class CompletionResultFactory(IFileSystemReader reader) : ICompletionRe
     {
         return new CompletionResult
         {
-            Entries = reader.Read(path).Select(CreateEntry)
+            Entries = reader.GetChildren(path).Select(CreateEntry)
         };
     }
 
     public CompletionResult Create(ParentChildPathPair parentChildPathPair)
     {
-        return new CompletionResult
+        return new FilterCompletionResult
         {
-            Entries = reader.Read(parentChildPathPair.ParentPath).Select(CreateEntry),
-            Rewind = parentChildPathPair.CurrentPath.Length
+            Entries = reader.GetChildren(parentChildPathPair.ParentPath).Select(CreateEntry),
+            Rewind = parentChildPathPair.CurrentPath.Length,
+            Filter = parentChildPathPair.CurrentPath
         };
     }
 
