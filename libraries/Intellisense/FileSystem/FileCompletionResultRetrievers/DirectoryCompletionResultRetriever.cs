@@ -2,17 +2,14 @@
 
 namespace Intellisense.FileSystem.FileCompletionResultRetrievers;
 
-internal class DirFileCompletionResultRetriever(IFileSystemReader fileSystemReader)
+internal class DirectoryCompletionResultRetriever(ICompletionResultFactory completionResultFactory)
     : FileCompletionResultRetriever
 {
     internal override CompletionResult GetCompletionResult(string path)
     {
         if (Path.EndsInDirectorySeparator(path))
         {
-            return new CompletionResult
-            {
-                Entries = fileSystemReader.Read(path)
-            };
+            return completionResultFactory.Create(path);
         }
 
         if (ParentChildPathPair.Create(path) is not { } pair)
@@ -20,10 +17,6 @@ internal class DirFileCompletionResultRetriever(IFileSystemReader fileSystemRead
             throw new UnreachableException($"Did not expect to fail to retrieve dir and file name for path {path}");
         }
 
-        return new CompletionResult
-        {
-            Entries = fileSystemReader.Read(pair.ParentPath),
-            Rewind = pair.CurrentPath.Length
-        };
+        return completionResultFactory.Create(pair);
     }
 }

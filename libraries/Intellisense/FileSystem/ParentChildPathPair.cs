@@ -1,6 +1,6 @@
 ﻿namespace Intellisense.FileSystem;
 
-internal record struct ParentChildPathPair
+public record struct ParentChildPathPair
 {
     public string ParentPath { get; }
     public string CurrentPath { get; }

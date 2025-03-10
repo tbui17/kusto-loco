@@ -1,18 +1,15 @@
 ﻿namespace Intellisense.FileSystem.FileCompletionResultRetrievers;
 
-internal class RootFileCompletionResultRetriever(IFileSystemReader fileSystemReader)
+internal class RootFileCompletionResultRetriever(ICompletionResultFactory completionResultFactory)
     : FileCompletionResultRetriever
 {
     internal override CompletionResult GetCompletionResult(string path)
     {
         if (path.EndsWith(':'))
         {
-            return CompletionResult.Empty;
+            return completionResultFactory.Create();
         }
 
-        return new CompletionResult
-        {
-            Entries = fileSystemReader.Read(path)
-        };
+        return completionResultFactory.Create(path);
     }
 }

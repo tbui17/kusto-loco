@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using FluentAssertions;
@@ -10,7 +9,7 @@ namespace IntellisenseTests;
 
 public class FileSystemIntellisenseServiceTests
 {
-    private readonly FileSystemIntellisenseService _fileSystemIntellisenseService;
+    private readonly IFileSystemIntellisenseService _fileSystemIntellisenseService;
 
     public FileSystemIntellisenseServiceTests()
     {
@@ -30,7 +29,7 @@ public class FileSystemIntellisenseServiceTests
                 CreateDefaultTempDir = false
             }
         );
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(new FileSystemReader(fileSystem));
+        _fileSystemIntellisenseService = FileSystemIntellisenseServiceProvider.GetFileSystemIntellisenseService(fileSystem);
     }
 
     [Fact]
@@ -184,11 +183,11 @@ public class FileSystemIntellisenseServiceTests
 
 public class FileSystemIntellisenseServiceIntegrationTests
 {
-    private readonly FileSystemIntellisenseService _fileSystemIntellisenseService;
+    private readonly IFileSystemIntellisenseService _fileSystemIntellisenseService;
 
     public FileSystemIntellisenseServiceIntegrationTests()
     {
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(new FileSystemReader(new FileSystem()));
+        _fileSystemIntellisenseService = FileSystemIntellisenseServiceProvider.GetFileSystemIntellisenseService();
     }
 
     [Fact]

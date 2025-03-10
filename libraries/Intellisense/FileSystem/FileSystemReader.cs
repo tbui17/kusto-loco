@@ -4,7 +4,7 @@ namespace Intellisense.FileSystem;
 
 public interface IFileSystemReader
 {
-    public IEnumerable<IntellisenseEntry> Read(string path);
+    public IEnumerable<IFileSystemInfo> Read(string path);
     public bool Exists(string path);
     public bool IsDirectory(string path);
     public bool IsFile(string path);
@@ -18,12 +18,11 @@ public class FileSystemReader(IFileSystem fileSystem) : IFileSystemReader
         IgnoreInaccessible = true
     };
 
-    public IEnumerable<IntellisenseEntry> Read(string path)
+    public IEnumerable<IFileSystemInfo> Read(string path)
     {
         return fileSystem
             .DirectoryInfo.New(path)
-            .EnumerateFileSystemInfos("*", EnumerationOptions)
-            .Select(x => new IntellisenseEntry { Name = x.Name });
+            .EnumerateFileSystemInfos("*", EnumerationOptions);
     }
 
     public bool Exists(string path)

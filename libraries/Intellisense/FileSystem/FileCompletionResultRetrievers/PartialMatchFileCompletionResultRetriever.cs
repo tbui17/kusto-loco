@@ -1,28 +1,27 @@
 ﻿namespace Intellisense.FileSystem.FileCompletionResultRetrievers;
 
 internal class PartialMatchFileCompletionResultRetriever(
-    IFileSystemReader reader
+    IFileSystemReader reader,
+    ICompletionResultFactory completionResultFactory
     ) : FileCompletionResultRetriever
 {
     internal override CompletionResult GetCompletionResult(string path)
     {
         if (ParentChildPathPair.Create(path) is not { } pair)
         {
-            return CompletionResult.Empty;
+            return completionResultFactory.Create();
         }
 
         if (!reader.Exists(pair.ParentPath))
         {
-            return CompletionResult.Empty;
+            return completionResultFactory.Create();
         }
 
-        var entries = reader.Read(pair.ParentPath)
-            .Where(x => x.Name.Contains(pair.CurrentPath, StringComparison.CurrentCultureIgnoreCase));
+        var result = completionResultFactory.Create(pair);
 
-        return new CompletionResult
+        return result with
         {
-            Entries = entries,
-            Rewind = pair.CurrentPath.Length
+            Entries = result.Entries.Where(x => x.Name.Contains(pair.CurrentPath, StringComparison.CurrentCultureIgnoreCase))
         };
     }
 }
