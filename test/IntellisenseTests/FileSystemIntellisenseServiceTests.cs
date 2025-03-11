@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using FluentAssertions;
+using Intellisense;
 using Intellisense.FileSystem;
 using Xunit;
 
@@ -37,45 +39,42 @@ public class FileSystemIntellisenseServiceTests
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentDirDirectorySeparatorSuffix_Empty()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/NonExistentDir/")).Entries;
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/NonExistentDir/"));
 
-        results.Should().BeEmpty();
+        result.GetFilteredEntries().Should().BeEmpty();
+
     }
 
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentDirNoDirectorySeparatorSuffix_Empty()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/NonExistentDir")).Entries;
+        var result =
+            _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/NonExistentDir"));
 
-        results.Should().BeEmpty();
+        result.GetFilteredEntries().Should().BeEmpty();
     }
 
     [Fact]
     public void
-        GetPathIntellisenseOptions_ValidDirNoDirectorySeparator_SiblingPathsMatchingInput()
+        GetPathIntellisenseOptions_ValidDirNoDirectorySeparator_OnlyDir()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/Folder1"));
 
-        result.Rewind.Should().Be("Folder1".Length);
-        result.Prefix.Should().Be(string.Empty);
 
         result
-            .Entries.Select(x => x.Name)
+            .GetFilteredEntries().Select(x => x.Name)
             .Should()
-            .BeEquivalentTo("Folder1","Folder2","File1.txt","File2.txt");
+            .BeEquivalentTo("Folder1");
     }
 
     [Fact]
     public void
-        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffix_DirectoryChildren()
+        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffix_Children()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/Folder1/"));
 
-        result.Prefix.Should().Be("");
-        result.Rewind.Should().Be(0);
-
         result
-            .Entries
+            .GetFilteredEntries()
             .Select(x => x.Name)
             .Should()
             .BeEquivalentTo(
@@ -89,15 +88,12 @@ public class FileSystemIntellisenseServiceTests
 
     [Fact]
     public void
-        GetPathIntellisenseOptions_ValidDirDirectorySeparatorSuffixAtRoot_DirectoryChildren()
+        GetPathIntellisenseOptions_RootWithDirSeparator_Children()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("C:/"));
 
-        result.Prefix.Should().Be("");
-        result.Rewind.Should().Be(0);
-
         result
-            .Entries
+            .GetFilteredEntries()
             .Select(x => x.Name)
             .Should()
             .BeEquivalentTo("File1.txt", "File2.txt", "Folder1", "Folder2");
@@ -105,29 +101,19 @@ public class FileSystemIntellisenseServiceTests
 
     [Fact]
     public void
-        GetPathIntellisenseOptions_ValidDirNoDirectorySeparatorSuffixAtRoot_Empty()
+        GetPathIntellisenseOptions_RootWithColon_Empty()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("C:"));
-        result.Entries.Should().BeEmpty();
+        result.GetFilteredEntries().Should().BeEmpty();
     }
 
-    [Fact]
-    public void GetPathIntellisenseOptions_ExclusiveValidFilePath_SingleFile()
-    {
-        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/Folder1/MyFile1.txt"));
-
-        result.Rewind.Should().Be("MyFile1.txt".Length);
-        result.Prefix.Should().Be(string.Empty);
-        result.Entries.Should().ContainSingle().Which.Name.Should().Be("MyFile1.txt");
-    }
 
     [Fact]
     public void GetPathIntellisenseOptions_PartialFileInput_PathsContainingInput()
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/Folder1/MyF"));
 
-        result.Rewind.Should().Be(3);
-        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("MyFile1.txt", "MyFile2.txt");
+        result.GetFilteredEntries().Select(x => x.Name).Should().BeEquivalentTo("MyFile1.txt", "MyFile2.txt");
     }
 
     [Fact]
@@ -135,8 +121,7 @@ public class FileSystemIntellisenseServiceTests
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("C:/Fol"));
 
-        result.Rewind.Should().Be("Fol".Length);
-        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("Folder1", "Folder2");
+        result.GetFilteredEntries().Select(x => x.Name).Should().BeEquivalentTo("Folder1", "Folder2");
     }
 
     [Fact]
@@ -144,8 +129,7 @@ public class FileSystemIntellisenseServiceTests
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("C:/Fil"));
 
-        result.Rewind.Should().Be("Fil".Length);
-        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt");
+        result.GetFilteredEntries().Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt");
     }
 
     [Fact]
@@ -153,33 +137,32 @@ public class FileSystemIntellisenseServiceTests
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("C:/F"));
 
-        result.Rewind.Should().Be("F".Length);
-        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt", "Folder1", "Folder2");
+        result.GetFilteredEntries().Select(x => x.Name).Should().BeEquivalentTo("File1.txt", "File2.txt", "Folder1", "Folder2");
     }
 
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentPath_Empty()
     {
-        var results =
-            _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/NonExistentPath.txt")).Entries;
+        var result =
+            _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/NonExistentPath.txt"));
 
-        results.Should().BeEmpty();
+        result.GetFilteredEntries().Should().BeEmpty();
     }
 
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentRootPath_Empty()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:")).Entries;
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:"));
 
-        results.Should().BeEmpty();
+        result.GetFilteredEntries().Should().BeEmpty();
     }
 
     [Fact]
     public void GetPathIntellisenseOptions_NonexistentRootPathAtRoot_Empty()
     {
-        var results = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:/Abc")).Entries;
+        var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("D:/Abc"));
 
-        results.Should().BeEmpty();
+        result.GetFilteredEntries().Should().BeEmpty();
     }
 
     [Fact]
@@ -187,11 +170,8 @@ public class FileSystemIntellisenseServiceTests
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/Folder1/Folder2/Folder3/Folder4/../../"));
 
-        result.Prefix.Should().Be("");
-        result.Rewind.Should().Be(0);
-
         result
-            .Entries
+            .GetFilteredEntries()
             .Select(x => x.Name)
             .Should()
             .BeEquivalentTo("File5.txt", "Folder3");
@@ -213,13 +193,21 @@ public class FileSystemIntellisenseServiceIntegrationTests
     {
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(RootedPath.CreateOrThrow("/"));
 
-        result.Prefix.Should().Be("");
-        result.Rewind.Should().Be(0);
-
         result
-            .Entries
+            .GetFilteredEntries()
             .Take(1)
             .Should()
             .NotBeEmpty();
+    }
+}
+
+file static class CompletionResultExtensions
+{
+    public static IEnumerable<IntellisenseEntry> GetFilteredEntries(this CompletionResult completionResult)
+    {
+        // AvalonEdit.CompletionList.SelectItems filters by entri
+        return completionResult.Entries.Where(x =>
+            x.Name.StartsWith(completionResult.Filter, StringComparison.OrdinalIgnoreCase)
+        );
     }
 }

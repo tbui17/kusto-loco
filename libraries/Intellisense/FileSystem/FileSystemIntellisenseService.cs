@@ -2,12 +2,15 @@
 
 namespace Intellisense.FileSystem;
 
+/// <summary>
+/// Retrieves completion results from a given file system path.
+/// </summary>
 public interface IFileSystemIntellisenseService
 {
     CompletionResult GetPathIntellisenseOptions(RootedPath rootedPath);
 }
 
-public class FileSystemIntellisenseService(IFileSystemReader reader, ICompletionResultFactory completionResultFactory) : IFileSystemIntellisenseService
+internal class FileSystemIntellisenseService(IFileSystemReader reader, ICompletionResultFactory completionResultFactory) : IFileSystemIntellisenseService
 {
 
     private readonly RootDirectoryCompletionResultRetriever _rootDirectoryCompletionResultRetriever = new(completionResultFactory);

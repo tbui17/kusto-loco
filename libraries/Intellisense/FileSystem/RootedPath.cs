@@ -1,6 +1,6 @@
 ﻿namespace Intellisense.FileSystem;
 
-public class RootedPath
+public readonly record struct RootedPath
 {
     public string Value { get; }
     private RootedPath(string path)

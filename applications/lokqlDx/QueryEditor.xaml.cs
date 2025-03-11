@@ -251,18 +251,20 @@ public partial class QueryEditor : UserControl
             return false;
         }
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
-        if (result.Entries.ToList() is not { Count: > 0 } entries)
+        if (result.Entries is not { Count: > 0 } entries)
         {
             return false;
         }
 
+        Console.WriteLine($"{result.Filter}");
+
         ShowCompletions(
             entries,
-            result.Prefix,
+            string.Empty,
             0,
             completionWindow =>
             {
-                completionWindow.StartOffset = Query.CaretOffset - result.Rewind;
+                completionWindow.StartOffset = Query.CaretOffset - result.Filter.Length;
                 completionWindow.CompletionList.SelectItem(result.Filter);
                 if (!completionWindow.CompletionList.ListBox.HasItems)
                 {

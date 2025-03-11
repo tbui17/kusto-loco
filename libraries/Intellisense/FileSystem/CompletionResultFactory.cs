@@ -2,7 +2,7 @@
 
 namespace Intellisense.FileSystem;
 
-public interface ICompletionResultFactory
+internal interface ICompletionResultFactory
 {
     public CompletionResult Create();
     public CompletionResult Create(string path);
@@ -20,16 +20,16 @@ internal class CompletionResultFactory(IFileSystemReader reader) : ICompletionRe
     {
         return new CompletionResult
         {
-            Entries = reader.GetChildren(path).Select(CreateEntry)
+            Entries = GetChildren(path)
         };
     }
 
     public CompletionResult Create(ParentChildPathPair parentChildPathPair)
     {
+        var children = GetChildren(parentChildPathPair.ParentPath);
         return new CompletionResult
         {
-            Entries = reader.GetChildren(parentChildPathPair.ParentPath).Select(CreateEntry),
-            Rewind = parentChildPathPair.CurrentPath.Length,
+            Entries = children,
             Filter = parentChildPathPair.CurrentPath
         };
     }
@@ -37,5 +37,18 @@ internal class CompletionResultFactory(IFileSystemReader reader) : ICompletionRe
     private static IntellisenseEntry CreateEntry(IFileSystemInfo fileSystemInfo)
     {
         return new IntellisenseEntry { Name = fileSystemInfo.Name };
+    }
+
+    private List<IntellisenseEntry> GetChildren(string path)
+    {
+        try
+        {
+            return reader.GetChildren(path).Select(CreateEntry).ToList();
+        }
+        catch (DirectoryNotFoundException e)
+        {
+            Console.Error.WriteLine($"The directory '{path}' was previously found, but now it it is not. {e}");
+            return [];
+        }
     }
 }

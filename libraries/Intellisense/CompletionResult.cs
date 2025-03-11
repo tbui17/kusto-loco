@@ -5,9 +5,13 @@ namespace Intellisense;
 public record CompletionResult
 {
     public static readonly CompletionResult Empty = new();
-    public IEnumerable<IntellisenseEntry> Entries { get; init; } = ImmutableArray<IntellisenseEntry>.Empty;
-    public string Prefix { get; init; } = string.Empty;
-    public int Rewind { get; init; }
+    /// <summary>
+    /// List of available completion entries.
+    /// </summary>
+    public IList<IntellisenseEntry> Entries { get; init; } = ImmutableArray<IntellisenseEntry>.Empty;
+    /// <summary>
+    /// The text filter to be applied to the completion entries.
+    /// </summary>
     public string Filter { get; init; } = string.Empty;
 }
 
