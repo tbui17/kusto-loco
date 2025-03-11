@@ -1,4 +1,5 @@
-﻿using Intellisense.FileSystem.FileCompletionResultRetrievers;
+﻿using System.Diagnostics;
+using Intellisense.FileSystem.FileCompletionResultRetrievers;
 
 namespace Intellisense.FileSystem;
 
@@ -9,6 +10,7 @@ public interface IFileSystemIntellisenseService
 
 public class FileSystemIntellisenseService(IFileSystemReader reader, ICompletionResultFactory completionResultFactory) : IFileSystemIntellisenseService
 {
+    private PathFactory _pathFactory = new(reader);
     private IFileCompletionResultRetriever CreateRetriever(RootedPath rootedPath)
     {
         var path = rootedPath.Value;
@@ -27,6 +29,12 @@ public class FileSystemIntellisenseService(IFileSystemReader reader, ICompletion
 
     public CompletionResult GetPathIntellisenseOptions(RootedPath rootedPath)
     {
-        return CreateRetriever(rootedPath).GetCompletionResult(rootedPath);
+        var path = _pathFactory.CreatePath(rootedPath);
+        return path switch
+        {
+            IFileName x => completionResultFactory.Create(x),
+            IGetChildren => completionResultFactory.Create(path.FullPath),
+            _ => completionResultFactory.Create(),
+        };
     }
 }

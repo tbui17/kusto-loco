@@ -20,4 +20,23 @@ internal class PartialMatchFileCompletionResultRetriever(
 
         return completionResultFactory.Create(pair);
     }
+
+    public IFullPath GetPath(RootedPath rootedPath)
+    {
+
+        var path = rootedPath.Value;
+        if (ParentChildPathPair.Create(path) is not { } pair)
+        {
+            return new NonExistentRootOrDirWithSep(path);
+
+        }
+
+        if (!reader.Exists(pair.ParentPath))
+        {
+            return new NonExistentPathAtRoot(path);
+        }
+
+        return new PartialFileOrDir(path);
+    }
 }
+

@@ -20,4 +20,18 @@ internal class DirectoryCompletionResultRetriever(ICompletionResultFactory compl
 
         return completionResultFactory.Create(pair);
     }
+
+    public IFullPath GetPath(IParentPath rootedPath)
+    {
+        var path = rootedPath.FullPath;
+        if (Path.EndsInDirectorySeparator(path))
+        {
+            return new ChildDirWithSep(path);
+        }
+
+        return new ChildDirWithoutSep(path);
+    }
 }
+
+
+

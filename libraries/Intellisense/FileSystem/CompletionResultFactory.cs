@@ -7,6 +7,7 @@ public interface ICompletionResultFactory
     public CompletionResult Create();
     public CompletionResult Create(string path);
     public CompletionResult Create(ParentChildPathPair parentChildPathPair);
+    public CompletionResult Create(IFileName parentChildPathPair);
 }
 
 internal class CompletionResultFactory(IFileSystemReader reader) : ICompletionResultFactory
@@ -31,6 +32,16 @@ internal class CompletionResultFactory(IFileSystemReader reader) : ICompletionRe
             Entries = reader.GetChildren(parentChildPathPair.ParentPath).Select(CreateEntry),
             Rewind = parentChildPathPair.CurrentPath.Length,
             Filter = parentChildPathPair.CurrentPath
+        };
+    }
+
+    public CompletionResult Create(IFileName parentChildPathPair)
+    {
+        return new FilterCompletionResult
+        {
+            Entries = reader.GetChildren(parentChildPathPair.ParentPath).Select(CreateEntry),
+            Rewind = parentChildPathPair.Name.Length,
+            Filter = parentChildPathPair.Name
         };
     }
 
