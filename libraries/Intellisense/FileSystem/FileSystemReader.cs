@@ -16,6 +16,12 @@ internal class FileSystemReader(IFileSystem fileSystem) : IFileSystemReader
 
     public IEnumerable<IFileSystemInfo> GetChildren(string path)
     {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return [];
+        }
+
+        // will throw with null or whitespace (not documented)
         var dir = fileSystem.DirectoryInfo.New(path);
 
         if (!dir.Exists)

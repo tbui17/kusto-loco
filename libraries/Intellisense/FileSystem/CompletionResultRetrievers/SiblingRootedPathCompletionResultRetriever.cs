@@ -6,11 +6,6 @@ internal class SiblingRootedPathCompletionResultRetriever(IFileSystemReader read
     {
         var pair = ParentChildPathPair.Create(fileSystemPath.GetPath());
 
-        if (pair is { ParentPath: "", CurrentPath: "" })
-        {
-            return CompletionResult.Empty;
-        }
-
         return reader
             .GetChildren(pair.ParentPath)
             .ToCompletionResult() with { Filter = pair.CurrentPath };

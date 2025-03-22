@@ -28,7 +28,7 @@ public class CompletionResultRetrieverTests
             new MockFileSystemOptions { CreateDefaultTempDir = false }
         );
         var reader = new FileSystemReader(fileSystem);
-        var retriever = new RootChildrenRootedPathCompletionResultRetriever(reader);
+        var retriever = new ChildrenRootedPathCompletionResultRetriever(reader);
 
         var rootedPath = RootedPath.CreateOrThrow(path);
         var result = retriever.GetCompletionResult(rootedPath);
@@ -55,7 +55,7 @@ public class CompletionResultRetrieverTests
         );
         var reader = new FileSystemReader(fileSystem);
 
-        var retriever = new RootChildrenRootedPathCompletionResultRetriever(reader);
+        var retriever = new ChildrenRootedPathCompletionResultRetriever(reader);
         var rootedPath = RootedPath.CreateOrThrow(path);
 
         retriever

@@ -21,7 +21,6 @@ internal class FileSystemIntellisenseService : IFileSystemIntellisenseService
     {
         IFileSystemPathCompletionResultRetriever[] rootedPathRetrievers =
         [
-            new RootChildrenRootedPathCompletionResultRetriever(reader),
             new ChildrenRootedPathCompletionResultRetriever(reader),
             new SiblingRootedPathCompletionResultRetriever(reader)
         ];

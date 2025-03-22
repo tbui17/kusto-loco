@@ -1,4 +1,6 @@
-﻿namespace Intellisense.FileSystem.CompletionResultRetrievers;
+﻿using NotNullStrings;
+
+namespace Intellisense.FileSystem.CompletionResultRetrievers;
 
 internal class ChildrenRootedPathCompletionResultRetriever(IFileSystemReader reader)
     : IFileSystemPathCompletionResultRetriever
@@ -6,14 +8,27 @@ internal class ChildrenRootedPathCompletionResultRetriever(IFileSystemReader rea
     public CompletionResult GetCompletionResult(IFileSystemPath fileSystemPath)
     {
 
-        var path = fileSystemPath.GetPath();
-        if (!path.EndsWithDirectorySeparator() || Path.GetDirectoryName(path) is not { } parentDir)
-        {
-            return CompletionResult.Empty;
-        }
+        var dir = GetTargetDirectory(fileSystemPath);
 
         return reader
-            .GetChildren(parentDir)
+            .GetChildren(dir)
             .ToCompletionResult();
+    }
+
+    private static string GetTargetDirectory(IFileSystemPath fileSystemPath)
+    {
+        var path = fileSystemPath.GetPath();
+        if (!path.EndsWithDirectorySeparator())
+        {
+            return string.Empty;
+        }
+
+        if (fileSystemPath.IsRootDirectory())
+        {
+            return path;
+        }
+
+        return Path.GetDirectoryName(path).NullToEmpty();
+
     }
 }
