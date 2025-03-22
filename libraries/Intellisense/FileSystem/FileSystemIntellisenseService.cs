@@ -15,19 +15,14 @@ public interface IFileSystemIntellisenseService
 
 internal class FileSystemIntellisenseService : IFileSystemIntellisenseService
 {
-    private readonly IPathCompletionResultRetriever[] _retrievers;
+    private readonly IFileSystemPathCompletionResultRetriever[] _retrievers;
 
     public FileSystemIntellisenseService(IFileSystemReader reader)
     {
-        IFileSystemPathCompletionResultRetriever[] rootedPathRetrievers =
-        [
-            new ChildrenRootedPathCompletionResultRetriever(reader),
-            new SiblingRootedPathCompletionResultRetriever(reader)
-        ];
-
         _retrievers =
         [
-            new RootedPathCompletionResultRetriever(rootedPathRetrievers)
+            new ChildrenCompletionResultRetriever(reader),
+            new SiblingCompletionResultRetriever(reader)
         ];
     }
 
@@ -35,8 +30,12 @@ internal class FileSystemIntellisenseService : IFileSystemIntellisenseService
     {
         try
         {
+            // Only supports rooted path at this time
+
+            IFileSystemPath fileSystemPath = RootedPath.Create(path);
+
             return _retrievers
-                .Select(x => x.GetCompletionResult(path))
+                .Select(x => x.GetCompletionResult(fileSystemPath))
                 .FirstOrDefault(x => x.Entries.Count > 0,CompletionResult.Empty);
         }
         catch (IOException)

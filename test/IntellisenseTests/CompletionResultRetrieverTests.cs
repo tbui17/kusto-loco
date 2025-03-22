@@ -28,7 +28,7 @@ public class CompletionResultRetrieverTests
             new MockFileSystemOptions { CreateDefaultTempDir = false }
         );
         var reader = new FileSystemReader(fileSystem);
-        var retriever = new ChildrenRootedPathCompletionResultRetriever(reader);
+        var retriever = new ChildrenCompletionResultRetriever(reader);
 
         var rootedPath = RootedPath.CreateOrThrow(path);
         var result = retriever.GetCompletionResult(rootedPath);
@@ -55,7 +55,7 @@ public class CompletionResultRetrieverTests
         );
         var reader = new FileSystemReader(fileSystem);
 
-        var retriever = new ChildrenRootedPathCompletionResultRetriever(reader);
+        var retriever = new ChildrenCompletionResultRetriever(reader);
         var rootedPath = RootedPath.CreateOrThrow(path);
 
         retriever
@@ -76,7 +76,7 @@ public class CompletionResultRetrieverTests
                 ["C:/Folder2/File22.txt"] = new("")
             }
         );
-        var retriever = new ChildrenRootedPathCompletionResultRetriever(new FileSystemReader(fileSystem));
+        var retriever = new ChildrenCompletionResultRetriever(new FileSystemReader(fileSystem));
 
 
         var rootedPath = RootedPath.CreateOrThrow(path);
@@ -100,7 +100,7 @@ public class CompletionResultRetrieverTests
             },
             new MockFileSystemOptions { CreateDefaultTempDir = false }
         );
-        var retriever = new SiblingRootedPathCompletionResultRetriever(new FileSystemReader(fileSystem));
+        var retriever = new SiblingCompletionResultRetriever(new FileSystemReader(fileSystem));
 
         var rootedPath = RootedPath.CreateOrThrow("C:/Folder1");
         var result = retriever.GetCompletionResult(rootedPath);

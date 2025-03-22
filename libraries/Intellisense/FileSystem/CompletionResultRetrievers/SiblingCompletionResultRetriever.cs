@@ -1,6 +1,6 @@
 ﻿namespace Intellisense.FileSystem.CompletionResultRetrievers;
 
-internal class SiblingRootedPathCompletionResultRetriever(IFileSystemReader reader) : IFileSystemPathCompletionResultRetriever
+internal class SiblingCompletionResultRetriever(IFileSystemReader reader) : IFileSystemPathCompletionResultRetriever
 {
     public CompletionResult GetCompletionResult(IFileSystemPath fileSystemPath)
     {
