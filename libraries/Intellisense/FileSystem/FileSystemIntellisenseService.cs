@@ -34,9 +34,9 @@ internal class FileSystemIntellisenseService : IFileSystemIntellisenseService
                 .Select(x => x.GetCompletionResult(path))
                 .FirstOrDefault(x => x is not null) ?? CompletionResult.Empty;
         }
-        catch (IOException e)
+        catch (IOException)
         {
-            Console.Error.WriteLine(e);
+            // TODO: Add error logger. If a DI container ends up being introduced, extract out new() calls.
             return CompletionResult.Empty;
         }
     }
