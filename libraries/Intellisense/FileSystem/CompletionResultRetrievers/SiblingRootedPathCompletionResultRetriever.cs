@@ -2,9 +2,11 @@
 
 internal class SiblingRootedPathCompletionResultRetriever(IFileSystemReader reader) : IFileSystemPathCompletionResultRetriever
 {
-    public CompletionResult GetCompletionResult(IFileSystemPath rootedPath)
+    public CompletionResult GetCompletionResult(IFileSystemPath fileSystemPath)
     {
-        if (ParentChildPathPair.Create(rootedPath.GetPath()) is not { } pair)
+        var pair = ParentChildPathPair.Create(fileSystemPath.GetPath());
+
+        if (pair is { ParentPath: "", CurrentPath: "" })
         {
             return CompletionResult.Empty;
         }

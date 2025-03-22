@@ -1,9 +1,13 @@
-﻿namespace Intellisense.FileSystem;
+﻿using NotNullStrings;
+
+namespace Intellisense.FileSystem;
 
 internal record struct ParentChildPathPair
 {
     public string ParentPath { get; }
     public string CurrentPath { get; }
+
+    private static readonly ParentChildPathPair Empty = new(string.Empty, string.Empty);
 
     private ParentChildPathPair(string parentPath, string currentPath)
     {
@@ -11,28 +15,16 @@ internal record struct ParentChildPathPair
         CurrentPath = currentPath;
     }
 
-    public static ParentChildPathPair? Create(string path)
+    public static ParentChildPathPair Create(string path)
     {
-        if (path.GetNonEmptyParentDirectory() is not { } dirName)
-        {
-            return null;
-        }
+        var dirName = Path.GetDirectoryName(path).NullToEmpty();
+        var fileName = Path.GetFileName(path);
 
-        if (path.GetNonEmptyFileName() is not { } fileName)
+        if (dirName.IsBlank() || fileName.IsBlank())
         {
-            return null;
+            return Empty;
         }
 
         return new ParentChildPathPair(dirName, fileName);
-    }
-
-    public static ParentChildPathPair CreateOrThrow(string path)
-    {
-        if (Create(path) is not { } pair)
-        {
-            throw new ArgumentException($"Expected {path} to have a nonempty parent directory but it did not.");
-        }
-
-        return pair;
     }
 }
