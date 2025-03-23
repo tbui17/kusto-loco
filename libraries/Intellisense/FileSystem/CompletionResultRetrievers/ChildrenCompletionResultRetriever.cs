@@ -1,4 +1,5 @@
-﻿using NotNullStrings;
+﻿using Intellisense.FileSystem.Paths;
+using NotNullStrings;
 
 namespace Intellisense.FileSystem.CompletionResultRetrievers;
 

@@ -5,6 +5,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Intellisense.FileSystem;
 using Intellisense.FileSystem.CompletionResultRetrievers;
+using Intellisense.FileSystem.Paths;
 using Xunit;
 
 namespace IntellisenseTests;

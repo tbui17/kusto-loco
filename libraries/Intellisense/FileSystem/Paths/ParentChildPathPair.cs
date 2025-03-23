@@ -1,6 +1,6 @@
 ﻿using NotNullStrings;
 
-namespace Intellisense.FileSystem;
+namespace Intellisense.FileSystem.Paths;
 
 internal record struct ParentChildPathPair
 {

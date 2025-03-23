@@ -1,4 +1,4 @@
-﻿namespace Intellisense.FileSystem;
+﻿namespace Intellisense.FileSystem.Paths;
 
 internal interface IFileSystemPath
 {

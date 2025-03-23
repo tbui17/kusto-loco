@@ -1,4 +1,4 @@
-﻿namespace Intellisense;
+﻿namespace Intellisense.FileSystem.Paths;
 
 internal static class PathExtensions
 {

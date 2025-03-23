@@ -1,4 +1,4 @@
-﻿namespace Intellisense.FileSystem;
+﻿namespace Intellisense.FileSystem.Paths;
 
 /// <summary>
 /// Guarantees that the path either starts with a directory separator (i.e. /) or a drive letter followed by a volume separator (i.e. C:).

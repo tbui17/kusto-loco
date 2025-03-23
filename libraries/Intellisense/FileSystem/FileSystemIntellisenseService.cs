@@ -1,4 +1,5 @@
 ﻿using Intellisense.FileSystem.CompletionResultRetrievers;
+using Intellisense.FileSystem.Paths;
 
 namespace Intellisense.FileSystem;
 
