@@ -4,6 +4,12 @@ namespace Intellisense.FileSystem;
 
 public interface IFileSystemIntellisenseService
 {
+    /// <summary>
+    /// Retrieves intellisense completion results from a given path.
+    /// </summary>
+    /// <returns>
+    /// An empty completion result if the path is invalid, does not exist, or does not have any children.
+    /// </returns>
     CompletionResult GetPathIntellisenseOptions(string path);
 }
 
@@ -13,7 +19,7 @@ internal class FileSystemIntellisenseService : IFileSystemIntellisenseService
 
     public FileSystemIntellisenseService(IFileSystemReader reader)
     {
-        IRootedPathCompletionResultRetriever[] rootedPathRetrievers =
+        IFileSystemPathCompletionResultRetriever[] rootedPathRetrievers =
         [
             new RootChildrenRootedPathCompletionResultRetriever(reader),
             new ChildrenRootedPathCompletionResultRetriever(reader),
@@ -32,7 +38,7 @@ internal class FileSystemIntellisenseService : IFileSystemIntellisenseService
         {
             return _retrievers
                 .Select(x => x.GetCompletionResult(path))
-                .FirstOrDefault(x => x is not null) ?? CompletionResult.Empty;
+                .FirstOrDefault(x => x.Entries.Count > 0,CompletionResult.Empty);
         }
         catch (IOException)
         {

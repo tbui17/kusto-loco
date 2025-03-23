@@ -1,12 +1,12 @@
 ﻿namespace Intellisense.FileSystem.CompletionResultRetrievers;
 
-internal class SiblingRootedPathCompletionResultRetriever(IFileSystemReader reader) : IRootedPathCompletionResultRetriever
+internal class SiblingRootedPathCompletionResultRetriever(IFileSystemReader reader) : IFileSystemPathCompletionResultRetriever
 {
-    public CompletionResult? GetCompletionResult(RootedPath rootedPath)
+    public CompletionResult GetCompletionResult(IFileSystemPath rootedPath)
     {
-        if (ParentChildPathPair.Create(rootedPath.Value) is not { } pair)
+        if (ParentChildPathPair.Create(rootedPath.GetPath()) is not { } pair)
         {
-            return null;
+            return CompletionResult.Empty;
         }
 
         return reader

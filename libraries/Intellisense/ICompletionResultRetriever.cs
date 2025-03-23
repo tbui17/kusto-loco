@@ -5,5 +5,5 @@
 /// </summary>
 internal interface ICompletionResultRetriever<in T>
 {
-    CompletionResult? GetCompletionResult(T argument);
+    CompletionResult GetCompletionResult(T argument);
 }
