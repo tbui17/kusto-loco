@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET SDK
@@ -17,7 +17,7 @@ jobs:
       - name: Restore
         run: dotnet restore
       - name: Build
-        run: dotnet build --no-restore /p:EnableWindowsTargeting=true
+        run: dotnet build --no-restore
       - name: Test
         continue-on-error: true
         run: dotnet test -c Debug --logger trx --collect:"XPlat Code Coverage"
