@@ -22,7 +22,7 @@ jobs:
         continue-on-error: true
         run: dotnet test -c Debug --logger trx --collect:"XPlat Code Coverage"
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2.17.1
+        uses: EnricoMi/publish-unit-test-result-action/windows@v2
         with:
           # NOTE: using trx_files instead of files due to https://github.com/EnricoMi/publish-unit-test-result-action/issues/424
           trx_files: "**/*.trx"
