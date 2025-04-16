@@ -15,6 +15,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Set tag
+        run: |
+          $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
+          if ($version -eq $null) {
+            throw "No version tag found"
+          }
+          echo "TAG=$version" >> $GITHUB_ENV
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -26,9 +33,6 @@ jobs:
         shell: pwsh
         run: |
           $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
-          if ($version -eq $null) {
-            $version = "0.0.0"
-          }
           ./build.ps1 -version $version -api ""
       - name: Upload
         if: runner.os == 'Windows'
