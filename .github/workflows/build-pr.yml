@@ -62,7 +62,7 @@ jobs:
           $osResults = $osNames |% {
              $os = $_
              $artifactFolder = gci $folder | where Name -eq "$($os)_artifacts"
-             $outputFolder = gci $artifactFolder | where Name -eq "output"
+             $outputFolder = gci $artifactFolder | where Name -eq ${{ env.CODE_COVERAGE_FOLDER }}
              gci $outputFolder -r "*.cobertura.xml" |% {
                 @{
                    os = $os
