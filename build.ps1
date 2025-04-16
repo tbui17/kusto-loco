@@ -66,6 +66,9 @@ get-ChildItem -r *.nupkg | % FullName
 
 if (-not $skipZip)
 {
+    if (!(Test-Path -Path ".\uploads")) {
+        New-Item -ItemType Directory -Path ".\uploads"
+    }
     $v=$version.replace('.','-')
     $compress = @{
     Path = ".\publish"
