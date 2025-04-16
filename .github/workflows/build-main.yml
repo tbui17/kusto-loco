@@ -24,19 +24,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1 # we just need the latest tag reachable from head
+          fetch-tags: true
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-      - name: Build
+      - name: Build # for test purposes; releases are still manual
         shell: pwsh
         run: |
           $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
           if ($version -eq $null) {
-            throw "No version tag found"
+            $version = "versionNotFound"
           }
-          ./build.ps1 -version $version -api ""
+          ./build.ps1 -version $version
           echo "TAG=$version" >> $env:GITHUB_ENV
       - name: Upload
         uses: actions/upload-artifact@v4
