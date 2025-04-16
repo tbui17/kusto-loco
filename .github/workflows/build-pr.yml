@@ -17,7 +17,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-          cache: true # main will do a clean run; deployment is still done manually see https://github.com/actions/setup-dotnet?tab=readme-ov-file#caching-nuget-packages if NU1403 error appears
       - name: Test
         if: matrix.os != 'ubuntu-latest'
         run: dotnet test
