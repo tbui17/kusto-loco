@@ -6,6 +6,7 @@ using FluentAssertions;
 using FluentAssertions.Execution;
 using Intellisense.FileSystem;
 using IntellisenseTests.Fixtures;
+using IntellisenseTests.Platforms;
 using Moq;
 using Xunit;
 
@@ -181,7 +182,7 @@ public class FileSystemIntellisenseServiceTests
         result.Entries.Should().BeEmpty();
     }
 
-    [Fact]
+    [WindowsOnlyFact]
     public void GetPathIntellisenseOptions_NonexistentRootPath_ReturnsEmptyResult()
     {
         var data = new Dictionary<string, MockFileData>
