@@ -25,7 +25,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $version = git tag | where {$_ -imatch "v\d\.\d\.\d"} | sort | select -Last 1 |% {$_.Substring(1)}
+          $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
           ./build.ps1 -version $version -api ""
       - name: Upload
         if: runner.os == 'Windows'
