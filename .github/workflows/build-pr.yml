@@ -74,6 +74,7 @@ jobs:
           $osResults |% {
             $str += "## $($_.os)`n___`n"
             $str += $_.contents
+            $str += "`n"
           }
           $str > "${{ env.CODE_COVERAGE_FILE }}"
           Write-Host "Created ${{ env.CODE_COVERAGE_FILE }} with coverage results from $($osResults.Count) OSes."
