@@ -20,6 +20,7 @@ jobs:
       - name: Test
         run: dotnet test --configuration Release
       - name: Build
+        shell: pwsh
         run: ./build.ps1 -version 1.0.5 -api ""
       - name: Upload
         uses: actions/upload-artifact@v4
