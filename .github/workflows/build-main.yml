@@ -24,8 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 1 # we just need the latest tag reachable from head
-          fetch-tags: true
+          fetch-depth: 0 # get full history and tags
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -35,7 +34,8 @@ jobs:
         run: |
           $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
           if ($version -eq $null) {
-            $version = "versionNotFound"
+            $version = "0.0.0"
+            Write-Warning "No version tag found. Using default version $version."
           }
           ./build.ps1 -version $version
           echo "TAG=$version" >> $env:GITHUB_ENV
