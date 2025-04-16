@@ -16,6 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Set tag
+        shell: pwsh
         run: |
           $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
           if ($version -eq $null) {
