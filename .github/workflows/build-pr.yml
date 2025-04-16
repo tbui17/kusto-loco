@@ -6,7 +6,8 @@ on:
       - main
 
 env:
-  ARTIFACT_FOLDER: artifacts
+  CODE_COVERAGE_FOLDER: code_coverage
+  TEST_SUMMARY_PROPERTIES_FILE: __test_summary_properties.json
 
 jobs:
   test:
@@ -21,7 +22,24 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Test
-        run: dotnet test --logger:trx
+        run: dotnet test --logger:trx --collect:"XPlat Code Coverage"
+      - name: Combine Coverage Reports
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.5 # https://github.com/danielpalme/ReportGenerator-GitHub-Action/blob/main/action.yml
+        with:
+          reports: "**/*.cobertura.xml"
+          targetdir: ${{ env.CODE_COVERAGE_FOLDER }}
+          reporttypes: "MarkdownSummaryGithub"
+          verbosity: "Info"
+          title: "Code Coverage"
+          tag: "${{ github.run_number }}_${{ github.run_id }}"
+          toolpath: "reportgeneratortool"
+      - name: Create properties folder
+        shell: pwsh
+        run: |
+            $properties = @{
+              os = "${{ runner.os }}"
+            }
+            $properties | ConvertTo-Json | out-file (join-path ${{ env.CODE_COVERAGE_FOLDER }} "${{ env.TEST_SUMMARY_PROPERTIES_FILE }}")
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -29,20 +47,44 @@ jobs:
           name: ${{ runner.os }}_artifacts
           path: |
             **/*.trx
+            ${{ env.CODE_COVERAGE_FOLDER }}/*
+            ${{ env.TEST_SUMMARY_PROPERTIES_FILE }}
   publish_test_results:
     needs: [ test ]
     runs-on: ubuntu-latest
     permissions: # https://github.com/EnricoMi/publish-unit-test-result-action?tab=readme-ov-file#permissions
       checks: write
       pull-requests: write
+    env:
+      PR_COMMENT_FILE: code_coverage_results.md
+      ARTIFACT_FOLDER: artifacts
     if: always()
     steps:
-      - uses: actions/checkout@v4
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           path: ${{ env.ARTIFACT_FOLDER }}
+      - name: Combine OS coverage reports
+        shell: pwsh
+        run: |
+          Write-Information "Combining OS coverage summary reports..."
+          $testSummaryFolders = gci ${{ env.ARTIFACT_FOLDER }} -r | where {test-path (join-path $_ "${{ env.TEST_SUMMARY_PROPERTIES_FILE }}")}
+          Write-Information "Found $($testSummaryFolders.Count) test summary folders"
+          $testSummaryFolders |% {
+             $properties = get-content (join-path $_ "${{ env.TEST_SUMMARY_PROPERTIES_FILE }}") -Raw | ConvertFrom-Json
+             $header = "# $($properties.os)`n"
+             $header | add-content ${{ env.PR_COMMENT_FILE }}
+             get-content (join-path $_ "SummaryGithub.md") | add-content ${{ env.PR_COMMENT_FILE }}
+             "`n" | add-content ${{ env.PR_COMMENT_FILE }}
+          }
+          Write-Information "Combined coverage summaries into ${{ env.PR_COMMENT_FILE }}"
+      - name: Add Coverage PR Comment # https://github.com/marocchino/sticky-pull-request-comment/blob/main/action.yml
+        uses: marocchino/sticky-pull-request-comment@v2.9.2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: ${{ env.PR_COMMENT_FILE }}
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2 # https://github.com/EnricoMi/publish-unit-test-result-action/blob/master/action.yml
+        uses: EnricoMi/publish-unit-test-result-action@v2.19.0 # https://github.com/EnricoMi/publish-unit-test-result-action/blob/master/action.yml
         with:
           files: ${{ env.ARTIFACT_FOLDER }}/**/*.trx
