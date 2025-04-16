@@ -9,6 +9,7 @@ env:
   ARTIFACT_FOLDER: artifacts
   CODE_COVERAGE_FOLDER: code_coverage
   CODE_COVERAGE_FILE: code_coverage_results.md
+  SUMMARY_FILE: SummaryGithub.md
 
 jobs:
   test:
@@ -61,14 +62,13 @@ jobs:
           $osNames = @("Linux", "Windows", "macOS")
           $osResults = $osNames |% {
              $os = $_
-             $artifactFolder = gci $folder | where Name -eq "$($os)_artifacts"
-             $outputFolder = gci $artifactFolder | where Name -eq ${{ env.CODE_COVERAGE_FOLDER }}
-             gci $outputFolder -r "*.cobertura.xml" |% {
-                @{
-                   os = $os
-                   contents = Get-Content $_
-                }
+             $filePath = "${{ env.ARTIFACT_FOLDER }}/$($os)_artifacts/${{ env.CODE_COVERAGE_FOLDER }}/${{ env.SUMMARY_FILE }}"
+             $contents = Get-Content $filePath
+             $result = @{
+                os = $os
+                contents = $contents
              }
+             return $result
           }
           $str = ""
           $osResults |% {
