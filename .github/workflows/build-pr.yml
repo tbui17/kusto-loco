@@ -7,6 +7,8 @@ on:
 
 env:
   ARTIFACT_FOLDER: artifacts
+  CODE_COVERAGE_FOLDER: code_coverage
+  CODE_COVERAGE_FILE: code_coverage_results.md
 
 jobs:
   test:
@@ -21,7 +23,17 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Test
-        run: dotnet test --logger:trx
+        run: dotnet test --logger:trx --collect:"XPlat Code Coverage"
+      - name: Combine Coverage Reports
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.5 # https://github.com/danielpalme/ReportGenerator-GitHub-Action/blob/main/action.yml
+        with:
+          reports: "**/*.cobertura.xml"
+          targetdir: ${{ env.CODE_COVERAGE_FOLDER }}
+          reporttypes: "MarkdownSummaryGithub"
+          verbosity: "Info"
+          title: "Code Coverage"
+          tag: "${{ github.run_number }}_${{ github.run_id }}"
+          toolpath: "reportgeneratortool"
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -29,6 +41,7 @@ jobs:
           name: ${{ runner.os }}_artifacts
           path: |
             **/*.trx
+            ${{ env.CODE_COVERAGE_FOLDER }}/*
   publish_test_results:
     needs: [ test ]
     runs-on: ubuntu-latest
@@ -37,12 +50,40 @@ jobs:
       pull-requests: write
     if: always()
     steps:
-      - uses: actions/checkout@v4
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           path: ${{ env.ARTIFACT_FOLDER }}
+      - name: Combine coverage reports
+        shell: pwsh
+        run: |
+          $folder = "${{ env.ARTIFACT_FOLDER }}"
+          $osNames = @("Linux", "Windows", "macOS")
+          $osResults = $osNames |% {
+             $os = $_
+             $artifactFolder = gci $folder | where Name -eq "$($os)_artifacts"
+             $outputFolder = gci $artifactFolder | where Name -eq "output"
+             gci $outputFolder -r "*.cobertura.xml" |% {
+                @{
+                   os = $os
+                   contents = Get-Content $_
+                }
+             }
+          }
+          $str = ""
+          $osResults |% {
+            $str += "## $($_.os)`n___`n"
+            $str += $_.contents
+          }
+          $str > "${{ env.CODE_COVERAGE_FILE }}"
+          Write-Host "Created ${{ env.CODE_COVERAGE_FILE }} with coverage results from $($osResults.Count) OSes."
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2 # https://github.com/EnricoMi/publish-unit-test-result-action/blob/master/action.yml
+        uses: EnricoMi/publish-unit-test-result-action@v2.19.0 # https://github.com/EnricoMi/publish-unit-test-result-action/blob/master/action.yml
         with:
           files: ${{ env.ARTIFACT_FOLDER }}/**/*.trx
+      - name: Add Coverage PR Comment # https://github.com/marocchino/sticky-pull-request-comment/blob/main/action.yml
+        uses: marocchino/sticky-pull-request-comment@v2.9.2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: ${{ env.CODE_COVERAGE_FILE }}
