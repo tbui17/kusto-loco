@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  ARTIFACT_FOLDER: artifacts
+
 jobs:
   test:
     strategy:
@@ -18,4 +21,28 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Test
-        run: dotnet test
+        run: dotnet test --logger:trx
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}_artifacts
+          path: |
+            **/*.trx
+  publish-test-results:
+    needs: [ test ]
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ env.ARTIFACT_FOLDER }}
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: ${{ env.ARTIFACT_FOLDER }}/**/*.trx
