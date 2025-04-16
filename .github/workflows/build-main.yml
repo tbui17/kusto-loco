@@ -19,5 +19,10 @@ jobs:
           dotnet-version: 9.0.x
       - name: Test
         run: dotnet test --configuration Release
-      - name: Pack
-        run: dotnet pack --no-restore --configuration Release
+      - name: Build
+        run: .\build.ps1 -version 1.0.5 -api ""
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}_${{ github.run_id }}_${{ github.run_number }}
+          path: uploads/
