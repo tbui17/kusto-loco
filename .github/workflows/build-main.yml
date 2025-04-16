@@ -6,37 +6,34 @@ on:
 
 
 jobs:
-  build:
+  test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set tag
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Test
+        run: dotnet test --configuration Release
+      - name: Build
         shell: pwsh
         run: |
           $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
           if ($version -eq $null) {
             throw "No version tag found"
           }
-          echo "TAG=$version" >> $GITHUB_ENV
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-      - name: Test
-        run: dotnet test --configuration Release
-      - name: Build
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $version = git tag | where {$_ -imatch "v\d+\.\d+\.\d+"} | sort | select -Last 1 |% {$_.Substring(1)}
           ./build.ps1 -version $version -api ""
+          echo "TAG=$version" >> $env:GITHUB_ENV
       - name: Upload
-        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.TAG }}_${{ github.run_id }}_${{ github.run_number }}
