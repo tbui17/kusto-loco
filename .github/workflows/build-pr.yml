@@ -29,7 +29,7 @@ jobs:
           name: ${{ runner.os }}_artifacts
           path: |
             **/*.trx
-  publish-test-results:
+  publish_test_results:
     needs: [ test ]
     runs-on: ubuntu-latest
     permissions:
