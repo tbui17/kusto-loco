@@ -13,27 +13,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
-      - name: Restore
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
+          cache: true # main will do a clean run; deployment is still done manually see https://github.com/actions/setup-dotnet?tab=readme-ov-file#caching-nuget-packages if NU1403 error appears
       - name: Test
         if: matrix.os != 'ubuntu-latest'
-        run: dotnet test --no-restore --no-build
-
-
-
-      # cover only one platform for now since it would produce too many comments on the PR otherwise...
+        run: dotnet test
+      # cover only one platform for now since it would produce too many comments on the PR otherwise
       - name: Coverage
         if: matrix.os == 'ubuntu-latest'
         continue-on-error: true # we want to publish results of failed tests
-        run: dotnet test --no-restore --no-build --collect:"XPlat Code Coverage"
+        run: dotnet test --collect:"XPlat Code Coverage"
       - name: Combine Coverage Reports
         uses: danielpalme/ReportGenerator-GitHub-Action@v5.4.5 # https://github.com/danielpalme/ReportGenerator-GitHub-Action/blob/main/action.yml
         if: matrix.os == 'ubuntu-latest'
