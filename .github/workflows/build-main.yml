@@ -13,17 +13,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Test
+        run: dotnet test --configuration Release
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
-  build:
-    runs-on: windows-latest
-    steps:
-      - name: Test
-        run: dotnet test --configuration Release
       - name: Build
         shell: pwsh
         run: |
@@ -36,5 +41,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.TAG }}_${{ github.run_id }}_${{ github.run_number }}
-          path: uploads/
+          name: build_${{ env.TAG }}_${{ github.run_id }}_${{ github.run_number }}
+          path: uploads/*
