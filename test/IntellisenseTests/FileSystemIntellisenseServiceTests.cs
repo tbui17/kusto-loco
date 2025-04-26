@@ -304,6 +304,7 @@ public class FileSystemIntellisenseServiceTests
         // TODO: just use real file system for all other tests?
         // can have a docker container for each system for local usage
         // or move cross-platform testing to TestContainers
+        // https://github.com/testcontainers/testcontainers-java/issues/781
 
         var f = new FileSystemIntellisenseServiceTestFixture(data);
         // f.FileSystemIntellisenseService.PathWhitelist = new PathExtensionWhitelist()
