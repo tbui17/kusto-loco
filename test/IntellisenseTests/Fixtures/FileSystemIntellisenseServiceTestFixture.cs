@@ -7,9 +7,11 @@ using Microsoft.Extensions.Logging.Testing;
 
 namespace IntellisenseTests.Fixtures;
 
+
+
 internal class FileSystemIntellisenseServiceTestFixture
 {
-    private readonly FileSystemIntellisenseService _fileSystemIntellisenseService;
+    public readonly FileSystemIntellisenseService FileSystemIntellisenseService;
     private readonly FakeLogger<IFileSystemIntellisenseService> _logger;
 
     public FileSystemIntellisenseServiceTestFixture(
@@ -21,16 +23,16 @@ internal class FileSystemIntellisenseServiceTestFixture
         var fileSystem = new MockFileSystem(fileData, options);
         var reader = new FileSystemReader(fileSystem);
         _logger = new FakeLogger<IFileSystemIntellisenseService>();
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(reader, _logger, new RootedPathFactory());
+        FileSystemIntellisenseService = new FileSystemIntellisenseService(reader, _logger, new RootedPathFactory());
     }
 
     public FileSystemIntellisenseServiceTestFixture(IFileSystemReader reader)
     {
         _logger = new FakeLogger<IFileSystemIntellisenseService>();
-        _fileSystemIntellisenseService = new FileSystemIntellisenseService(reader, _logger, new RootedPathFactory());
+        FileSystemIntellisenseService = new FileSystemIntellisenseService(reader, _logger, new RootedPathFactory());
     }
 
     public IReadOnlyList<FakeLogRecord> GetLogs() => _logger.Collector.GetSnapshot();
 
-    public CompletionResult GetPathIntellisenseOptions(string path) => _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
+    public CompletionResult GetPathIntellisenseOptions(string path) => FileSystemIntellisenseService.GetPathIntellisenseOptions(path);
 }

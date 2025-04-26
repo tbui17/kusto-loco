@@ -289,11 +289,6 @@ public partial class QueryEditor : UserControl
 
         var path = Parser.GetLastArgument(_editorHelper.GetCurrentLineText());
 
-        if (path.IsBlank())
-        {
-            return false;
-        }
-
         var result = _fileSystemIntellisenseService.GetPathIntellisenseOptions(path);
         if (result.IsEmpty())
         {
@@ -369,13 +364,19 @@ public partial class QueryEditor : UserControl
         if (e.Text == "?") ShowCompletions(_kqlFunctionEntries, string.Empty, 1);
     }
 
-    public void AddInternalCommands(IEnumerable<VerbEntry> verbEntries)
+    public void AddInternalCommands(
+        IEnumerable<VerbEntry> verbEntries,
+        IEnumerable<string> supportedExtensions
+    )
     {
         var verbs = verbEntries.ToArray();
         _internalCommands = verbs.Select(v =>
                 new IntellisenseEntry(v.Name, v.HelpText, string.Empty))
             .ToArray();
-        Parser = new CommandParser(verbs.Select(x => x.Name),".");
+        var fileCommands = verbs.Where(x => x.SupportsFiles).Select(x => x.Name);
+        Parser = new CommandParser(fileCommands,".");
+
+        _fileSystemIntellisenseService.PathWhitelist = new PathExtensionWhitelist(supportedExtensions);
     }
 
     private void textEditor_TextArea_TextEntering(object sender, TextCompositionEventArgs e)

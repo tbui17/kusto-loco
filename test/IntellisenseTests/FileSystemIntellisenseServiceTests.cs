@@ -287,4 +287,30 @@ public class FileSystemIntellisenseServiceTests
         var result = f.GetPathIntellisenseOptions("//unc/c/");
         result.Entries.Select(x => x.Name).Should().BeEquivalentTo("folderC1", "folderC2");
     }
+
+    [Fact]
+    public void GetPathIntellisenseOptions_WithPathExtensionFilter_Retrieves()
+    {
+        var data = new Dictionary<string, MockFileData>
+        {
+            ["/Folder1/File1.txt"] = new(""),
+            ["/Folder1/File2.json"] = new(""),
+            ["/Folder1/File3.txt"] = new(""),
+            ["/Folder1/File4.yml"] = new(""),
+            ["/Folder1/Folder2"] = new("")
+
+        };
+
+        // TODO: just use real file system for all other tests?
+        // can have a docker container for each system for local usage
+        // or move cross-platform testing to TestContainers
+
+        var f = new FileSystemIntellisenseServiceTestFixture(data);
+        // f.FileSystemIntellisenseService.PathWhitelist = new PathExtensionWhitelist()
+        var result = f.GetPathIntellisenseOptions("/Folder1/");
+
+        using var _ = new AssertionScope();
+        result.Entries.Select(x => x.Name).Should().BeEquivalentTo("File1.txt","File3.txt","File4.yml","Folder2");
+        result.Filter.Should().Be("");
+    }
 }

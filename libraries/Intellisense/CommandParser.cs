@@ -30,3 +30,5 @@ public class CommandParser
         return args[^1];
     }
 }
+
+public readonly record struct CommandTokens{}

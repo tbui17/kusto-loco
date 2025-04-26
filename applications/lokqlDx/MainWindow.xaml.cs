@@ -164,7 +164,8 @@ public partial class MainWindow : Window
     private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
     {
         _preferenceManager.RetrieveUiPreferencesFromDisk();
-        Editor.AddInternalCommands(_explorer._commandProcessor.GetVerbs());
+
+        Editor.AddInternalCommands(_explorer._commandProcessor.GetVerbs(),_explorer._loader.GetSupportedAdaptors().SelectMany(x => x.Extensions));
         RegistryOperations.AssociateFileType(true);
         PreferencesManager.EnsureDefaultFolderExists();
         UpdateDynamicUiFromPreferences(true);

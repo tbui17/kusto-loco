@@ -3,9 +3,11 @@ using NotNullStrings;
 
 namespace Intellisense.FileSystem;
 
-internal interface IFileSystemReader
+public interface IFileSystemReader
 {
     IEnumerable<IFileSystemInfo> GetChildren(string path);
+    bool IsDirectory(string path);
+    string GetExtension(string path);
 }
 
 internal class FileSystemReader(IFileSystem fileSystem) : IFileSystemReader
@@ -32,4 +34,7 @@ internal class FileSystemReader(IFileSystem fileSystem) : IFileSystemReader
 
         return dir.EnumerateFileSystemInfos("*", EnumerationOptions);
     }
+
+    public bool IsDirectory(string path) => fileSystem.Directory.Exists(path);
+    public string GetExtension(string path) => fileSystem.Path.GetExtension(path);
 }
