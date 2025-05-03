@@ -1,5 +1,7 @@
 ﻿using Intellisense.FileSystem.Paths;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Intellisense.FileSystem;
 
@@ -11,31 +13,72 @@ public interface IFileSystemIntellisenseService
     /// <returns>
     /// An empty completion result if the path is invalid, does not exist, or does not have any children.
     /// </returns>
-    CompletionResult GetPathIntellisenseOptions(string path);
+    Task<CompletionResult> GetPathIntellisenseOptionsAsync(string path, CancellationToken cancelToken = default);
 }
 
 internal class FileSystemIntellisenseService(
     ILogger<IFileSystemIntellisenseService> logger,
     IPathFactory pathFactory,
-    IEnumerable<IFileSystemPathCompletionResultRetriever> retrievers
-    )
+    IServiceScopeFactory scopeFactory,
+    IOptions<IntellisenseTimeoutOptions> timeoutOptions
+)
     : IFileSystemIntellisenseService
 {
 
-    public CompletionResult GetPathIntellisenseOptions(string path)
+    public async Task<CompletionResult> GetPathIntellisenseOptionsAsync(string path, CancellationToken cancelToken = default)
     {
+        // TODO: a late-returning request could potentially push stale results
+        // need to invalidate stale requests
+        using var scope = scopeFactory.CreateScope();
+        var retrievers =
+            scope.ServiceProvider.GetRequiredService<IEnumerable<IFileSystemPathCompletionResultRetriever>>();
+        using var ctx = scope.ServiceProvider.GetRequiredService<CancellationContext>();
+        ctx.TokenSource.CancelAfter(timeoutOptions.Value.IntellisenseTimeout);
+        ctx.LinkToken(cancelToken);
+        using var _ = logger.BeginScope(new()
+            {
+                [nameof(path)] = path,
+                [nameof(timeoutOptions.Value.IntellisenseTimeout)] = timeoutOptions.Value.IntellisenseTimeout,
+            }
+        );
+        var token = ctx.TokenSource.Token;
+
         try
         {
             var pathObj = pathFactory.Create(path);
 
-            return retrievers
-                .Select(x => x.GetCompletionResult(pathObj))
-                .FirstOrDefault(x => !x.IsEmpty(), CompletionResult.Empty);
+            var result = await retrievers
+                .Select(x => x.GetCompletionResultAsync(pathObj))
+                .ToList()
+                .ToWhenAnyAsyncEnumerable()
+                .TakeWhile(_ => !token.IsCancellationRequested)
+                .Where(x => !x.IsEmpty())
+                .FirstOrDefaultAsync(ctx.TokenSource.Token);
+
+            return result ?? CompletionResult.Empty;
         }
-        catch (IOException e)
+        catch (Exception e) when (e is TaskCanceledException or OperationCanceledException)
         {
-            logger.LogError(e, "IO error occurred while fetching intellisense results. Returning empty result.");
+            logger.LogTrace("Timed out while fetching intellisense results. Returning empty result.");
             return CompletionResult.Empty;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error occurred while fetching intellisense results. Returning empty result.");
+            return CompletionResult.Empty;
+        }
+    }
+}
+
+file static class AsyncExtensions
+{
+    public static async IAsyncEnumerable<T> ToWhenAnyAsyncEnumerable<T>(this IList<Task<T>> tasks)
+    {
+        while (tasks.Count > 0)
+        {
+            var next = await Task.WhenAny(tasks);
+            tasks.Remove(next);
+            yield return await next;
         }
     }
 }
