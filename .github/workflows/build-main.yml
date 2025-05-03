@@ -20,6 +20,6 @@ jobs:
       - name: Set PowerShell execution policy # for smb shares
         if: ${{ matrix.os == 'windows-latest' }}
         shell: powershell
-        run: Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser -Force
+        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force
       - name: Test
         run: dotnet test --configuration Release
