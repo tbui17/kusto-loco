@@ -34,9 +34,11 @@ public partial class App
         appBuilder.UseApplicationLogging();
 
 
+
         appBuilder
             .Services
-            .AddIntellisense();
+            .AddIntellisense()
+            .AddSingleton<IntellisenseClient>();
 
         return appBuilder.Build();
     }
