@@ -1,4 +1,6 @@
-﻿using Intellisense.FileSystem.Paths;
+﻿using System.Runtime.CompilerServices;
+using Intellisense.Configuration;
+using Intellisense.FileSystem.Paths;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -20,23 +22,25 @@ internal class FileSystemIntellisenseService(
     ILogger<IFileSystemIntellisenseService> logger,
     IPathFactory pathFactory,
     IServiceScopeFactory scopeFactory,
-    IOptions<IntellisenseTimeoutOptions> timeoutOptions
+    IOptions<IntellisenseOptions> timeoutOptions
 )
     : IFileSystemIntellisenseService
 {
-
-    public async Task<CompletionResult> GetPathIntellisenseOptionsAsync(string path, CancellationToken cancelToken = default)
+    public async Task<CompletionResult> GetPathIntellisenseOptionsAsync(
+        string path,
+        CancellationToken cancelToken = default
+    )
     {
         using var scope = scopeFactory.CreateScope();
         var retrievers =
             scope.ServiceProvider.GetRequiredService<IEnumerable<IFileSystemPathCompletionResultRetriever>>();
         using var ctx = scope.ServiceProvider.GetRequiredService<CancellationContext>();
-        ctx.TokenSource.CancelAfter(timeoutOptions.Value.IntellisenseTimeout);
+        ctx.TokenSource.CancelAfter(timeoutOptions.Value.Timeout);
         ctx.LinkToken(cancelToken);
         using var _ = logger.BeginScope(new()
             {
                 [nameof(path)] = path,
-                [nameof(timeoutOptions.Value.IntellisenseTimeout)] = timeoutOptions.Value.IntellisenseTimeout,
+                [nameof(timeoutOptions.Value.Timeout)] = timeoutOptions.Value.Timeout,
             }
         );
         var token = ctx.TokenSource.Token;
@@ -47,11 +51,9 @@ internal class FileSystemIntellisenseService(
 
             var result = await retrievers
                 .Select(x => x.GetCompletionResultAsync(pathObj))
-                .ToList()
-                .AsWhenAnyAsyncEnumerable()
-                .TakeWhile(_ => !token.IsCancellationRequested)
+                .WhenEach(token)
                 .Where(x => !x.IsEmpty())
-                .FirstOrDefaultAsync(ctx.TokenSource.Token);
+                .FirstOrDefaultAsync(token);
 
             return result ?? CompletionResult.Empty;
         }
@@ -70,13 +72,14 @@ internal class FileSystemIntellisenseService(
 
 file static class AsyncExtensions
 {
-    public static async IAsyncEnumerable<T> AsWhenAnyAsyncEnumerable<T>(this IList<Task<T>> tasks)
+    public static async IAsyncEnumerable<T> WhenEach<T>(this IEnumerable<Task<T>> tasks, [EnumeratorCancellation] CancellationToken token)
     {
-        while (tasks.Count > 0)
+        ConfiguredCancelableAsyncEnumerable<Task<T>> enumerator = Task.WhenEach(tasks).WithCancellation(token);
+
+        await foreach (Task<T> item in enumerator)
         {
-            var next = await Task.WhenAny(tasks);
-            tasks.Remove(next);
-            yield return await next;
+            yield return await item;
+
         }
     }
 }

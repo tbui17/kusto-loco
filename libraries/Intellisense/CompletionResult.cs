@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using System.IO.Abstractions;
-using Intellisense.FileSystem.Shares;
 
 namespace Intellisense;
 
@@ -34,10 +33,5 @@ internal static class CompletionResultExtensions
     public static CompletionResult ToCompletionResult(this IEnumerable<string> names) => new()
     {
         Entries = names.Select(x => new IntellisenseEntry { Name = x }).ToArray()
-    };
-
-    public static CompletionResult ToCompletionResult(this IEnumerable<ShareInfo> shares) => new()
-    {
-        Entries = shares.Select(x => new IntellisenseEntry { Name = x.Name }).ToArray()
     };
 }

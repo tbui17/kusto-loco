@@ -1,10 +1,13 @@
 using System.IO.Abstractions;
+using System.Reflection;
 using Intellisense.FileSystem;
 using Intellisense.FileSystem.CompletionResultRetrievers;
 using Intellisense.FileSystem.Paths;
 using Intellisense.FileSystem.Shares;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Intellisense.Configuration;
 
@@ -14,6 +17,15 @@ public static class IntellisenseServiceCollectionExtensions
     {
         // main services
         services.AddSingleton<IFileSystemIntellisenseService, FileSystemIntellisenseService>();
+
+        services.Configure<IntellisenseOptions>(x =>
+            {
+                // default location
+                var folder1 = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var appName = Assembly.GetEntryAssembly()?.GetName().Name ?? "Unknown";
+                x.Directory = Path.Combine(folder1, appName);
+            }
+        );
 
 
         // file system
@@ -33,16 +45,13 @@ public static class IntellisenseServiceCollectionExtensions
 
         services
             .AddScoped<IShareReader, Win32ApiShareReader>()
-            .AddSingleton<IShareClient, ShareClient>()
-            .AddSingleton<IHostRepository, HostRepository>()
-            .AddSingleton<IShareResource, Win32ShareResource>();
+            .AddScoped<IHostRepository, HostRepository>()
+            .AddScoped<IConnectionVerifier, ConnectionVerifier>()
+            .AddSqliteDbContext<HostDbContext>();
 
 
         // timeouts
         services.AddCancellationContext();
-
-        services.TryConfigure<IntellisenseTimeoutOptions>(x => x.IntellisenseTimeout = TimeSpan.FromMilliseconds(5000));
-
 
         // auxiliary services
         services.TryAddSingleton<IFileSystem, System.IO.Abstractions.FileSystem>();
@@ -51,19 +60,18 @@ public static class IntellisenseServiceCollectionExtensions
 
         return services;
     }
+}
 
-    public static IServiceCollection PostConfigureIntellisenseTimeouts(
-        this IServiceCollection services,
-        Action<IntellisenseTimeoutOptions> configure
-    )
+file static class DbContextServiceCollectionExtensions
+{
+    public static IServiceCollection AddSqliteDbContext<T>(this IServiceCollection services) where T : DbContext
     {
-        services.PostConfigure(configure);
+        services.AddDbContextFactory<T>((providers, opts) => opts
+            .UseSqlite(
+                $"Data Source={providers.GetRequiredService<IOptionsMonitor<IntellisenseOptions>>().CurrentValue.DatabaseLocation}"
+            )
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+        );
         return services;
-    }
-
-    private static void AddCancellationContext(this IServiceCollection services)
-    {
-        services.TryAddScoped<CancellationContext>();
-        services.TryAddScoped(x => x.GetRequiredService<CancellationContext>().TokenSource);
     }
 }

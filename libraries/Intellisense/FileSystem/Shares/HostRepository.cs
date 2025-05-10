@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
-using NotNullStrings;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Intellisense.FileSystem.Shares;
 
@@ -9,23 +9,26 @@ internal interface IHostRepository
     Task AddAsync(string host);
 }
 
-internal class HostRepository(TimeProvider timeProvider) : IHostRepository
+internal class HostRepository(
+    TimeProvider timeProvider,
+    ILogger<HostRepository> logger,
+    HostDbContext db
+) : IHostRepository
 {
-    private readonly ConcurrentDictionary<string, HostName> _hosts = new([]);
-
-    public Task<IEnumerable<string>> ListAsync() => Task.FromResult<IEnumerable<string>>(_hosts.Keys);
+    public async Task<IEnumerable<string>> ListAsync() => await db.Hosts.OrderByDescending(x => x.Updated).Take(100).Select(x => x.Name).ToListAsync();
 
     public async Task AddAsync(string host)
     {
-        await Task.CompletedTask;
         var hostName = CreateHostName(host);
 
-        if (!IsValid(hostName))
-        {
-            return;
-        }
-
-        _hosts.TryAdd(hostName.Name, hostName);
+        await db.Database.ExecuteSqlAsync(
+            $"""
+             INSERT INTO Hosts (Name, Created, Updated) 
+             VALUES ({hostName.Name}, {hostName.Created}, {hostName.Updated})
+             ON CONFLICT (Name) 
+             DO UPDATE SET Updated = {hostName.Updated}
+             """
+        );
     }
 
     private HostName CreateHostName(string host)
@@ -33,26 +36,57 @@ internal class HostRepository(TimeProvider timeProvider) : IHostRepository
         var hostName = new HostName
         {
             Name = host.ToLowerInvariant(),
-            LastUpdated = timeProvider.GetUtcNow()
+            Updated = timeProvider.GetUtcNow().DateTime,
+            Created = timeProvider.GetUtcNow().DateTime
         };
         return hostName;
     }
 
-    private bool IsValid(HostName hostName) =>
-        hostName.Name.IsNotBlank()
-        && hostName.Name.IsLowercase()
-        && hostName.LastUpdated <= timeProvider.GetUtcNow();
+    private void Migrate()
+    {
+        logger.LogInformation("Beginning migration.");
+        try
+        {
+            db.Database.EnsureCreated();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to ensure database creation. Deleting and recreating database.");
+            try
+            {
+                db.Database.EnsureDeleted();
+                db.Database.EnsureCreated();
+            }
+            catch (Exception e2)
+            {
+                logger.LogError(e2, "Failed to recreate database. Service will not provide host intellisense.");
+            }
+        }
+    }
 }
 
-// hosts are probably resolved in a case insensitive manner regardless of any context and/or OS platform this class might be used in?
-// we'll just have everything be lowercase and not worry about this
-// keep this in mind when migrating over to db / file storage
 internal class HostName
 {
     public int Id { get; set; }
-
-    // index unique
     public string Name { get; set; } = string.Empty;
+    public DateTime Created { get; set; }
+    public DateTime Updated { get; set; }
+}
 
-    public DateTimeOffset LastUpdated { get; set; }
+internal class HostDbContext(DbContextOptions<HostDbContext> opts) : DbContext(opts)
+{
+    public string Name { get; init; } = string.Empty;
+    public DateTimeOffset Created { get; init; }
+    public DbSet<HostName> Hosts { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // ReSharper disable once ArrangeMethodOrOperatorBody
+    {
+        modelBuilder.Entity<HostName>(e =>
+            {
+                e.HasIndex(p => p.Name).IsUnique();
+                e.Property(p => p.Name).HasMaxLength(255);
+            }
+        );
+    }
 }

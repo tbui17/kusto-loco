@@ -1,20 +1,16 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Intellisense;
 using Intellisense.FileSystem;
 using IntellisenseTests.Fixtures;
 using IntellisenseTests.Platforms;
-using Microsoft.Extensions.DependencyInjection;
+
 namespace IntellisenseTests;
 
 
 public class FileSystemIntellisenseServiceFileShareTests
 {
-    private readonly IFileSystemIntellisenseService _service = new ServiceCollection()
-        .AddDefault()
-        .BuildServiceProvider()
-        .GetRequiredService<IFileSystemIntellisenseService>();
+    private readonly IFileSystemIntellisenseService _service = new DatabaseFixture().IntellisenseService;
 
     [WindowsAdminOnlyFact]
     public async Task GetPathIntellisenseOptions_HostSep_ChildShares()
@@ -105,5 +101,3 @@ public class FileSystemIntellisenseServiceFileShareTests
         result.Entries.Select(x => x.Name).Should().BeEquivalentTo("MyKustoFolder1", "MyKustoFolder2");
     }
 }
-
-

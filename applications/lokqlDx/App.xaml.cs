@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 
 using System.Windows.Threading;
 using Intellisense.Configuration;
@@ -32,13 +33,18 @@ public partial class App
         var appBuilder = Host.CreateApplicationBuilder();
 
         appBuilder.UseApplicationLogging();
-
-
+        var appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lokql");
 
         appBuilder
             .Services
             .AddIntellisense()
-            .AddSingleton<IntellisenseClient>();
+            .AddSingleton<IntellisenseClient>()
+            .Configure<IntellisenseOptions>(opts =>
+            {
+                opts.Timeout = TimeSpan.FromSeconds(10);
+                opts.Directory = appDir;
+            })
+            .Configure<LoggingOptions>(x => x.Directory = appDir);
 
         return appBuilder.Build();
     }

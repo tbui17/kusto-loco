@@ -19,7 +19,7 @@ public static class IntellisenseCollectionExtensions
 
     public static IServiceCollection AddDefault(this IServiceCollection services) => services
         .AddIntellisense()
-        .AddLogging(x => x.AddConsole());
+        .AddFakeLogging();
 
     private static IServiceCollection MockSingleton<T>(this IServiceCollection services) where T : class => services
         .AddSingleton<T>(_ => Mock.Of<T>());

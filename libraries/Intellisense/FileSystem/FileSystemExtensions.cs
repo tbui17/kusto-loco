@@ -1,44 +1,68 @@
+using System.IO.Abstractions;
+
 namespace Intellisense.FileSystem;
 
 internal static class FileSystemExtensions
 {
-    public static void Touch(this FileInfo file)
+    public static void Touch(this IFileInfo file)
     {
-        if (file.Directory is not { } dir)
+        if (!file.Directory!.Exists)
         {
-            dir = new DirectoryInfo(Path.GetTempPath());
-            file = new FileInfo(Path.Combine(dir.FullName, file.Name));
+            file.Directory.Create();
         }
-
-        if (!dir.Exists)
-        {
-            dir.Create();
-        }
-
         file.Create().Dispose();
     }
 
-    public static List<FileInfo> TouchFiles(this DirectoryInfo directory, IEnumerable<string> filePaths) =>
+    public static void SetContent(this IFileInfo file, string content)
+    {
+        file.EnsureDeleted();
+        file.EnsureParentExists();
+        file.FileSystem.File.WriteAllText(file.FullName, content);
+    }
+
+    public static void EnsureParentExists(this IFileInfo file)
+    {
+        if (!file.Directory!.Exists)
+        {
+            file.Directory.Create();
+        }
+    }
+
+    public static List<IFileInfo> TouchFiles(this IDirectoryInfo directory, IEnumerable<string> filePaths) =>
         filePaths.Select(directory.TouchFile).ToList();
 
-    public static FileInfo TouchFile(this DirectoryInfo directory, string fileName)
+    public static IFileInfo TouchFile(this IDirectoryInfo directory, string fileName)
     {
+        var path2 = directory.FileSystem.Path;
         if (!directory.Exists)
         {
             directory.Create();
         }
-        var path = Path.Combine(directory.FullName, fileName);
-        var file = new FileInfo(path);
+        var path = path2.Combine(directory.FullName, fileName);
+        var file = directory.FileSystem.FileInfo.New(path);
         file.Touch();
         return file;
     }
 
-    public static void CreateOrClean(this DirectoryInfo directory)
+    public static void CreateOrClean(this IDirectoryInfo directory)
     {
         if (directory.Exists)
         {
             directory.Delete(true);
         }
         directory.Create();
+    }
+
+    public static void EnsureDeleted(this IFileInfo file)
+    {
+        try
+        {
+            file.Delete();
+        }
+        catch (Exception)
+        {
+            // ignore
+        }
+
     }
 }

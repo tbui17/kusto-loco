@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Abstractions;
 using NotNullStrings;
 using static SimpleExec.Command;
 
@@ -10,7 +11,7 @@ public sealed class TestShare : IDisposable
 
     private TestShare(){}
 
-    public DirectoryInfo Folder { get; set; } = null!;
+    public IDirectoryInfo Folder { get; set; } = null!;
     public string Name { get; set; } = null!;
 
     public static TestShare Create(string name = "")
@@ -27,7 +28,7 @@ public sealed class TestShare : IDisposable
         }
 
         var shareFolder = Path.Combine(Path.GetTempPath(), share.Name);
-        share.Folder = Directory.CreateDirectory(shareFolder);
+        share.Folder = TestHelper.FileSystem.Directory.CreateDirectory(shareFolder);
 
         try
         {
