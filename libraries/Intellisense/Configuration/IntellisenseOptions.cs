@@ -13,4 +13,5 @@ public class IntellisenseOptions
 
     private const string FileName = "hosts.json";
     internal string DatabaseLocation => Path.Combine(Directory, FileName);
+    internal string DatabaseConnectionString => $"Data Source={DatabaseLocation};";
 }

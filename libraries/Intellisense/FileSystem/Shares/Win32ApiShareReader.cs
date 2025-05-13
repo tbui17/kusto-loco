@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using Vanara.PInvoke;
 
@@ -13,17 +12,10 @@ internal partial class Win32ApiShareReader(
 )
     : IShareReader, IDisposable
 {
-
     private readonly CancellationToken _token = cts.Token;
 
     public async Task<IEnumerable<string>> GetSharesAsync(string host)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            logger.LogDebug("Not running on Windows. Skipping.");
-            return [];
-        }
-
         using var _ = logger.BeginScope(new()
             {
                 [nameof(host)] = host
@@ -51,7 +43,6 @@ internal partial class Win32ApiShareReader(
         {
             logger.LogInformation(e, "Access denied while fetching shares.");
             return [];
-
         }
         catch (FileNotFoundException e)
         {
@@ -74,6 +65,7 @@ internal partial class Win32ApiShareReader(
         {
             logger.LogDebug("Found no shares.");
         }
+
         return shares.Select(x => x.shi1_netname);
     }
 }
@@ -98,7 +90,7 @@ internal partial class Win32ApiShareReader
         }
         catch (OperationCanceledException e)
         {
-            logger.LogTrace(e,"Resource busy. Cannot accept additional requests.");
+            logger.LogTrace(e, "Resource busy. Cannot accept additional requests.");
             throw;
         }
 
@@ -138,7 +130,8 @@ internal partial class Win32ApiShareReader
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 internal partial class Win32ApiShareReader
 {
-    private static IEnumerable<NetApi32.SHARE_INFO_1> EnumerateShares(string host) => NetApi32.NetShareEnum<NetApi32.SHARE_INFO_1>(host);
+    private static IEnumerable<NetApi32.SHARE_INFO_1> EnumerateShares(string host) =>
+        NetApi32.NetShareEnum<NetApi32.SHARE_INFO_1>(host);
 }
 
 file static class TokenExtensions
@@ -149,6 +142,7 @@ file static class TokenExtensions
         {
             return;
         }
+
         var time = pollTime ?? TimeSpan.FromMilliseconds(100);
 
         while (!token.IsCancellationRequested)

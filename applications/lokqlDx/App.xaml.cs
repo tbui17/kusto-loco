@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Intellisense.Configuration;
 using LogSetup;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -23,6 +24,8 @@ public partial class App
         window.Show();
     }
 
+    public static readonly string AppPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lokql");
+
     public static IServiceProvider Services => Instance.Services;
 
     public static T Resolve<T>() where T : notnull => Instance.Services.GetRequiredService<T>();
@@ -33,7 +36,7 @@ public partial class App
         var appBuilder = Host.CreateApplicationBuilder();
 
         appBuilder.UseApplicationLogging();
-        var appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "lokql");
+
 
         appBuilder
             .Services
@@ -42,9 +45,9 @@ public partial class App
             .Configure<IntellisenseOptions>(opts =>
             {
                 opts.Timeout = TimeSpan.FromSeconds(10);
-                opts.Directory = appDir;
+                opts.Directory = AppPath;
             })
-            .Configure<LoggingOptions>(x => x.Directory = appDir);
+            .Configure<LoggingOptions>(x => x.Directory = AppPath);
 
         return appBuilder.Build();
     }

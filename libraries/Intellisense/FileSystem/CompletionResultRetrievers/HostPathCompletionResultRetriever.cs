@@ -1,21 +1,24 @@
 using Intellisense.FileSystem.Paths;
 using Intellisense.FileSystem.Shares;
 
+
 namespace Intellisense.FileSystem.CompletionResultRetrievers;
 
-internal class HostPathCompletionResultRetriever(IHostRepository hostRepository)
+internal class HostPathCompletionResultRetriever(IHostRepository repository)
     : IFileSystemPathCompletionResultRetriever
 {
     public async Task<CompletionResult> GetCompletionResultAsync(IFileSystemPath fileSystemPath)
     {
         if (fileSystemPath.GetPath() is "//" or @"\\")
         {
-            return (await hostRepository.ListAsync()).ToCompletionResult();
+            var result = await repository.ListAsync();
+            return result.ToCompletionResult();
         }
 
         if (fileSystemPath is UncPath p && p.IsHost() && !p.GetPath().EndsWithDirectorySeparator())
         {
-            return (await hostRepository.ListAsync()).ToCompletionResult() with
+            var result = await repository.ListAsync();
+            return result.ToCompletionResult() with
             {
                 Filter = p.Host
             };

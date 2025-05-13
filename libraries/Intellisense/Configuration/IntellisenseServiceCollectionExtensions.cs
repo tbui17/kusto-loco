@@ -1,5 +1,6 @@
 using System.IO.Abstractions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Intellisense.FileSystem;
 using Intellisense.FileSystem.CompletionResultRetrievers;
 using Intellisense.FileSystem.Paths;
@@ -27,6 +28,8 @@ public static class IntellisenseServiceCollectionExtensions
             }
         );
 
+        services.AddIntellisenseDatabase();
+
 
         // file system
         services.AddSingleton<IFileSystemReader, FileSystemReader>();
@@ -43,11 +46,20 @@ public static class IntellisenseServiceCollectionExtensions
 
         // shares
 
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            services
+                .AddScoped<IShareReader, Win32ApiShareReader>()
+                .AddScoped<IHostReader, Win32ApiHostReader>();
+        }
+        else
+        {
+            services.AddSingleton<IHostReader, NullReader>();
+        }
+
         services
-            .AddScoped<IShareReader, Win32ApiShareReader>()
             .AddScoped<IHostRepository, HostRepository>()
-            .AddScoped<IConnectionVerifier, ConnectionVerifier>()
-            .AddSqliteDbContext<HostDbContext>();
+            .AddScoped<IConnectionVerifier, ConnectionVerifier>();
 
 
         // timeouts
@@ -64,14 +76,28 @@ public static class IntellisenseServiceCollectionExtensions
 
 file static class DbContextServiceCollectionExtensions
 {
-    public static IServiceCollection AddSqliteDbContext<T>(this IServiceCollection services) where T : DbContext
+    public static IServiceCollection AddIntellisenseDatabase(this IServiceCollection services)
     {
-        services.AddDbContextFactory<T>((providers, opts) => opts
-            .UseSqlite(
-                $"Data Source={providers.GetRequiredService<IOptionsMonitor<IntellisenseOptions>>().CurrentValue.DatabaseLocation}"
+        services
+            .AddDbContextFactory<IntellisenseDbContext>((provider, builder) =>
+                builder.UseSqlite(provider.GetRequiredService<IOptionsMonitor<IntellisenseOptions>>()
+                    .CurrentValue.DatabaseLocation
+                )
             )
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-        );
+            .AddSingleton<DbContextOptions<IntellisenseDbContext>>(provider =>
+                {
+                    var builder = new DbContextOptionsBuilder<IntellisenseDbContext>();
+                    var connectionString =
+                        $"Data Source={provider.GetRequiredService<IOptionsMonitor<IntellisenseOptions>>().CurrentValue.DatabaseLocation}";
+                    builder.UseSqlite(connectionString);
+                    return builder.Options;
+                }
+            )
+            .AddScoped<IntellisenseDbContext>(x =>
+                x.GetRequiredService<IDbContextFactory<IntellisenseDbContext>>().CreateDbContext()
+            )
+            .AddSingleton<IntellisenseDbManager>();
+
         return services;
     }
 }

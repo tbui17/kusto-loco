@@ -1,5 +1,5 @@
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Intellisense.FileSystem.Shares;
 
@@ -11,8 +11,7 @@ internal interface IHostRepository
 
 internal class HostRepository(
     TimeProvider timeProvider,
-    ILogger<HostRepository> logger,
-    HostDbContext db
+    IntellisenseDbContext db
 ) : IHostRepository
 {
     public async Task<IEnumerable<string>> ListAsync() => await db.Hosts.OrderByDescending(x => x.Updated).Take(100).Select(x => x.Name).ToListAsync();
@@ -41,52 +40,31 @@ internal class HostRepository(
         };
         return hostName;
     }
+}
 
-    private void Migrate()
+
+internal class HostRepositoryProd(TimeProvider timeProvider) : IHostRepository
+{
+    private readonly ConcurrentDictionary<string, HostName> _hosts = new([]);
+
+    public Task<IEnumerable<string>> ListAsync() => Task.FromResult<IEnumerable<string>>(_hosts.Keys);
+
+    public async Task AddAsync(string host)
     {
-        logger.LogInformation("Beginning migration.");
-        try
-        {
-            db.Database.EnsureCreated();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to ensure database creation. Deleting and recreating database.");
-            try
-            {
-                db.Database.EnsureDeleted();
-                db.Database.EnsureCreated();
-            }
-            catch (Exception e2)
-            {
-                logger.LogError(e2, "Failed to recreate database. Service will not provide host intellisense.");
-            }
-        }
+        await Task.CompletedTask;
+        var hostName = CreateHostName(host);
+        _hosts.TryAdd(hostName.Name, hostName);
     }
-}
 
-internal class HostName
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public DateTime Created { get; set; }
-    public DateTime Updated { get; set; }
-}
-
-internal class HostDbContext(DbContextOptions<HostDbContext> opts) : DbContext(opts)
-{
-    public string Name { get; init; } = string.Empty;
-    public DateTimeOffset Created { get; init; }
-    public DbSet<HostName> Hosts { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-        // ReSharper disable once ArrangeMethodOrOperatorBody
+    private HostName CreateHostName(string host)
     {
-        modelBuilder.Entity<HostName>(e =>
-            {
-                e.HasIndex(p => p.Name).IsUnique();
-                e.Property(p => p.Name).HasMaxLength(255);
-            }
-        );
+        var now = timeProvider.GetUtcNow().DateTime;
+        var hostName = new HostName
+        {
+            Name = host.ToLowerInvariant(),
+            Updated = now,
+            Created = now,
+        };
+        return hostName;
     }
 }

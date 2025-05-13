@@ -19,6 +19,7 @@
       <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" />
       <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" />
       <PackageReference Include="Vanara.Core" />
+      <PackageReference Include="Vanara.PInvoke.Mpr" />
       <PackageReference Include="Vanara.PInvoke.NetApi32" />
     </ItemGroup>
 
