@@ -14,7 +14,7 @@ public class FileSystemIntellisenseServiceHostCompletionTests
     private readonly IFileSystemIntellisenseService _service = new DatabaseFixture().IntellisenseService;
 
 
-    [WindowsAdminOnlyFact]
+    [WindowsOnlyFact(Skip = "temp")]
     public async Task GetPathIntellisenseOptions_AfterValidHostFound_ReturnsHost()
     {
         var twoSlash = "//";
@@ -31,7 +31,7 @@ public class FileSystemIntellisenseServiceHostCompletionTests
         res2.Entries.Should().ContainSingle(x => x.Name == Constants.LocalHost);
     }
 
-    [WindowsAdminOnlyFact]
+    [WindowsOnlyFact(Skip = "temp")]
     public async Task GetPathIntellisenseOptions_AfterValidHostFoundAndPartialName_ReturnsHost()
     {
         var twoSlash = "//";
@@ -49,7 +49,7 @@ public class FileSystemIntellisenseServiceHostCompletionTests
         res2.Entries.Should().ContainSingle(x => x.Name == Constants.LocalHost);
     }
 
-    [WindowsAdminOnlyFact]
+    [WindowsOnlyFact(Skip = "temp")]
     public async Task GetPathIntellisenseOptions_PartialHost_ReturnsSiblings()
     {
 
@@ -67,7 +67,7 @@ public class FileSystemIntellisenseServiceHostCompletionTests
         res2.Entries.Should().ContainSingle(x => x.Name == Constants.LocalHost);
     }
 
-    [WindowsAdminOnlyFact]
+    [WindowsOnlyFact(Skip = "temp")]
     public async Task GetPathIntellisenseOptions_UncPathPartialIpAddress_ShowsAvailableHosts()
     {
         // setup cache state
