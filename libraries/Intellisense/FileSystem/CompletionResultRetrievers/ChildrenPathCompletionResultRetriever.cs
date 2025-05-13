@@ -8,8 +8,9 @@ namespace Intellisense.FileSystem.CompletionResultRetrievers;
 internal class ChildrenPathCompletionResultRetriever(IFileSystemReader reader)
     : IFileSystemPathCompletionResultRetriever
 {
-    public CompletionResult GetCompletionResult(IFileSystemPath fileSystemPath)
+    public async Task<CompletionResult> GetCompletionResultAsync(IFileSystemPath fileSystemPath)
     {
+        await Task.CompletedTask;
         var path = fileSystemPath.GetPath();
         if (!path.EndsWithDirectorySeparator())
         {
@@ -25,6 +26,4 @@ internal class ChildrenPathCompletionResultRetriever(IFileSystemReader reader)
             .GetChildren(fileSystemPath.GetParent())
             .ToCompletionResult();
     }
-
-    public Task<CompletionResult> GetCompletionResultAsync(IFileSystemPath fileSystemPath) => Task.FromResult(GetCompletionResult(fileSystemPath));
 }
