@@ -1,6 +1,16 @@
-﻿using NLog;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Serilog;
+using Serilog.Formatting.Compact;
+using NLog;
 using NLog.Config;
 using NLog.Targets;
+using Serilog.Filters;
+using Serilog.Templates;
+using Serilog.Templates.Themes;
+using LogLevel = NLog.LogLevel;
+
 
 namespace LogSetup;
 
@@ -57,8 +67,72 @@ public static class LoggingExtensions
             if (!loggingTargets.Contains(LoggingTarget.Debugger))
                 return;
 
-            var debuggerTarget = new DebuggerTarget("debug") { Layout = "${time}|${message} ${exception}" };
+            var debuggerTarget = new DebuggerTarget("debug") { Layout = "${time}|${message} ${exception}", };
             config.LoggingRules.Add(new LoggingRule("*", LogLevel.Info, LogLevel.Fatal, debuggerTarget));
         }
     }
+
+    public static IHostApplicationBuilder UseApplicationLogging(this IHostApplicationBuilder builder)
+    {
+        var services = builder.Services;
+
+        builder.Services.AddOptions<LoggingOptions>().BindConfiguration(LoggingOptions.Logging);
+
+
+        services
+            .AddSerilog((sc, logBuilder) =>
+                {
+
+                    using var bootstrapLogger = new LoggerConfiguration().WriteTo.Console(new CompactJsonFormatter()).CreateLogger();
+
+                    var opts = sc.GetRequiredService<IOptions<LoggingOptions>>();
+                    var logPath = opts.Value.Directory;
+                    bootstrapLogger.Information("Log storage path: {Path}", logPath);
+
+                    logBuilder
+                        .ReadFrom.Configuration(builder.Configuration)
+                        .ReadFrom.Services(sc)
+                        .Enrich.FromLogContext();
+
+
+#if DEBUG
+
+
+                    var newLine = Environment.NewLine;
+                    var template = new ExpressionTemplate(
+                        "[{@t:HH:mm:ss.fff} {@l:u3}] {Concat('\e[32m',Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1))} | {@mt}{NewLine}  {@p}{NewLine}{@x}"
+                            .Replace("{NewLine}", newLine),
+                        theme: GetTheme(),
+                        applyThemeWhenOutputIsRedirected: true
+                    );
+                    logBuilder
+                        .WriteTo.Console(template)
+                        .WriteTo.Debug(template)
+                        .WriteTo.File(new CompactJsonFormatter(), logPath, fileSizeLimitBytes: 5 * 1000 ^ 2)
+                        .Filter.ByExcluding(Matching.WithProperty<string>("SourceContext",s => s.StartsWith("Microsoft.") || s.StartsWith("System.")));
+#else
+                    logBuilder.MinimumLevel.Information();
+                    logBuilder.WriteTo.File(new CompactJsonFormatter(), logPath, fileSizeLimitBytes: 5 * 1000^2)
+                        .WriteTo.Console(LogEventLevel.Error);
+#endif
+                }
+            );
+
+        return builder;
+    }
+
+        public static IHostApplicationBuilder UseTestLogging(this IHostApplicationBuilder builder) => builder.UseApplicationLogging();
+
+        private static TemplateTheme GetTheme() => new(TemplateTheme.Code,
+        new Dictionary<TemplateThemeStyle, string>
+        {
+            [TemplateThemeStyle.SecondaryText] = "\e[0;97m",
+        }
+    );
+}
+
+public class LoggingOptions
+{
+    public const string Logging = "Logging";
+    public string Directory { get; set; } = string.Empty;
 }
