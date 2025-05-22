@@ -1,11 +1,14 @@
-﻿namespace Intellisense.FileSystem.Paths;
+﻿using System.Runtime.InteropServices;
 
-internal interface IRootedPathFactory
+namespace Intellisense.FileSystem.Paths;
+
+internal interface IPathFactory
 {
     IFileSystemPath Create(string path);
+    T CreateOrThrow<T>(string path) where T : IFileSystemPath;
 }
 
-internal class RootedPathFactory : IRootedPathFactory
+internal class PathFactory : IPathFactory
 {
     public IFileSystemPath Create(string path)
     {
@@ -14,13 +17,15 @@ internal class RootedPathFactory : IRootedPathFactory
             return EmptyPath.Instance;
         }
 
-        // we only care about windows or unix
-        if (OperatingSystem.IsWindows())
+        if (Uri.TryCreate(path, UriKind.Absolute, out var uri) && uri.IsUnc)
         {
-            return new WindowsRootedPath(path);
+            return new UncPath(uri);
         }
 
-        return new UnixRootedPath(path);
+
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? new WindowsRootedPath(path)
+            : new UnixRootedPath(path);
     }
 
     public T CreateOrThrow<T>(string path) where T : IFileSystemPath
