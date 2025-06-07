@@ -28,14 +28,6 @@ public partial class App
 
         var appBuilder = Host.CreateApplicationBuilder();
 
-
-
-
-        appBuilder
-            .Services
-            .AddIntellisense()
-            .AddSingleton<GlobalExceptionHandler>();
-
         return appBuilder.Build();
     }
 
